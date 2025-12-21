@@ -4,7 +4,8 @@ import { HelmetProvider } from 'react-helmet-async';
 import Navigation from './components/Navigation';
 import ErrorBoundary from './components/ErrorBoundary';
 import CommandMenu from './components/CommandMenu';
-import BackToTop from './components/BackToTop'; // Import BackToTop
+import BackToTop from './components/BackToTop';
+import Starfield from './components/Starfield'; // Import Starfield
 import { TRANSLATIONS } from './constants';
 import { ContentService } from './services/content';
 import { Language } from './types';
@@ -31,7 +32,7 @@ const ScrollToTop = () => {
 
 // Loading Component
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
+  <div className="min-h-screen flex items-center justify-center bg-background relative z-10">
     <div className="flex flex-col items-center gap-4">
       <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
       <p className="font-mono text-xs text-muted-foreground animate-pulse">INITIALIZING...</p>
@@ -86,9 +87,19 @@ const AppContent: React.FC<{
   }, []);
 
   return (
-    // Removed 'cursor-none' class to restore system cursor
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-500 flex flex-col">
       
+      {/* Global Background Layer */}
+      {!isLanding && (
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+          {theme === 'dark' ? (
+            <Starfield className="opacity-100 transition-opacity duration-1000" />
+          ) : (
+            <div className="absolute inset-0 opacity-[0.4] bg-lab-grid bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_10%,#000_20%,transparent_100%)] transition-opacity duration-1000" />
+          )}
+        </div>
+      )}
+
       {/* Conditionally Render Navigation and Command Menu */}
       {!isLanding && (
         <>
@@ -161,7 +172,7 @@ const AppContent: React.FC<{
       {!isLanding && (
         <>
           <BackToTop />
-          <footer className="py-8 border-t border-gray-200 dark:border-zinc-900 mt-12 bg-white dark:bg-zinc-950 transition-colors duration-500">
+          <footer className="relative z-10 py-8 border-t border-gray-200 dark:border-zinc-900 mt-12 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm transition-colors duration-500">
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 opacity-60 hover:opacity-100 transition-opacity">
               
               <div className="flex flex-col md:flex-row items-center gap-4 text-sm">

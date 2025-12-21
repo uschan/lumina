@@ -24,7 +24,8 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang }) => {
   return (
     <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6">
       <SEO title={project.title} description={project.description[lang]} lang={lang} />
-      <div className="fixed inset-0 z-[-1] opacity-[0.2] bg-lab-grid dark:bg-lab-grid-dark bg-[size:40px_40px]"></div>
+      
+      {/* Background is now global in App.tsx */}
 
       <div className="max-w-7xl mx-auto">
         {/* Navigation */}

@@ -12,8 +12,7 @@ const Projects: React.FC<ProjectsProps> = ({ projects, lang }) => {
   return (
     <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6">
       
-      {/* Background Grid Pattern */}
-      <div className="fixed inset-0 z-[-1] opacity-[0.4] bg-lab-grid dark:bg-lab-grid-dark bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]"></div>
+      {/* Background is now global in App.tsx */}
 
       <div className="max-w-7xl mx-auto">
         <motion.div 

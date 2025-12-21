@@ -111,7 +111,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang }) => {
           style={{ scaleX }}
         />
 
-       <div className="fixed inset-0 z-[-1] opacity-[0.2] bg-lab-grid dark:bg-lab-grid-dark bg-[size:40px_40px]"></div>
+       {/* Background is now global in App.tsx */}
 
        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-12">
           

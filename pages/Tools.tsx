@@ -12,8 +12,7 @@ const Tools: React.FC<ToolsProps> = ({ tools, lang }) => {
   return (
     <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6">
       
-      {/* Background Grid Pattern */}
-      <div className="fixed inset-0 z-[-1] opacity-[0.4] bg-lab-grid dark:bg-lab-grid-dark bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_10%,#000_20%,transparent_100%)]"></div>
+      {/* Background is now global in App.tsx */}
 
       <div className="max-w-6xl mx-auto">
         <div className="mb-16">

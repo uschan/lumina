@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Github, Twitter, Linkedin, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Github, Twitter, Linkedin } from 'lucide-react';
 import { BentoContainer, BentoItem } from '../components/BentoGrid';
 import ProjectCard from '../components/ProjectCard';
 import SupportWidget from '../components/SupportWidget';
@@ -55,8 +55,7 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
     <div className="relative min-h-screen pt-32 pb-20 px-4 sm:px-6">
       <SEO title="Home" description={t.hero.description} lang={lang} />
       
-      {/* Background Grid Pattern */}
-      <div className="fixed inset-0 z-[-1] opacity-[0.4] bg-lab-grid dark:bg-lab-grid-dark bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_10%,#000_20%,transparent_100%)]"></div>
+      {/* Background is now global in App.tsx */}
 
       <div className="max-w-7xl mx-auto space-y-24">
         
