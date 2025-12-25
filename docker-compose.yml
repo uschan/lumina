@@ -1,9 +1,8 @@
 version: '3'
 services:
   oauth-server:
-    # Switched to the most stable Node.js based image (1M+ pulls)
-    # This fixes the "repository does not exist" error from deleted Go images
-    image: ismailtlem/netlify-cms-oauth-provider-node:latest
+    # Build locally from the ./oauth directory
+    build: ./oauth
     container_name: lumina-auth
     restart: always
     environment:
@@ -11,8 +10,6 @@ services:
       - OAUTH_CLIENT_ID=Iv23li5ruvGgBnvl0J3c
       # Hardcoded Client Secret
       - OAUTH_CLIENT_SECRET=4718d7dd8dfabc4d745539368039d495077c591b
-      # Optional: Define scopes to ensure CMS has permission
-      - SCOPES=repo,user
     ports:
-      # Map host 8080 to container 3000 (Node app default port)
+      # Map host 8080 to container 3000 (Express default)
       - "8080:3000"
