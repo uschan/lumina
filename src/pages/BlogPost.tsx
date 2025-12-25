@@ -14,7 +14,8 @@ interface BlogPostProps {
 }
 
 const BlogPost: React.FC<BlogPostProps> = ({ lang }) => {
-  const { slug } = useParams<{ slug: string }>(); // Use slug instead of id
+  const { slug } = useParams<{ slug: string }>(); 
+  // Use slug lookup
   const post = ContentService.getPostBySlug(slug || '');
   const [copied, setCopied] = useState(false);
   const [reactions, setReactions] = useState({ like: 124, heart: 45, rocket: 89 });

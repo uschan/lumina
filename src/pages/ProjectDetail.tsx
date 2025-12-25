@@ -14,7 +14,7 @@ interface ProjectDetailProps {
 
 const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang }) => {
   const { slug } = useParams<{ slug: string }>(); 
-  // Use ContentService with slug
+  // Use slug lookup
   const project = ContentService.getProjectBySlug(slug || '');
 
   if (!project) {
