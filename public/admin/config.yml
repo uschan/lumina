@@ -12,8 +12,8 @@ backend:
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
 
-# Local testing configuration
-local_backend: true
+# Local testing configuration - DISABLED FOR PRODUCTION
+# local_backend: true
 
 collections:
   - name: "content"
