@@ -3,7 +3,6 @@ backend:
   repo: uschan/lumina
   branch: main
   # ⬇️ VPS OAUTH CONFIGURATION ⬇️
-  # Base URL points to your Nginx proxy location which forwards to the Go Auth Server
   base_url: https://gemini.wildsalt.me/oauth
   auth_endpoint: auth
   # ⬆️ ----------------------- ⬆️
@@ -11,9 +10,6 @@ backend:
 
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
-
-# Local testing configuration - DISABLED FOR PRODUCTION
-# local_backend: true
 
 collections:
   - name: "content"
