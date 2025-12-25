@@ -6,58 +6,75 @@
   <title>Lumina Content Manager</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    #login-status {
-      position: fixed; top: 20px; right: 20px; 
-      padding: 10px 15px; background: rgba(0,0,0,0.8); color: white; 
-      border-radius: 8px; font-size: 12px; z-index: 9999; display: none;
+    .loading-container {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #09090b; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #71717a; z-index: -1;
     }
+    .loading-spinner {
+      width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #6366f1; border-radius: 50%;
+      animation: spin 1s linear infinite; margin-bottom: 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
-  <!-- Load js-yaml to parse config client-side (This fixes the Content-Type error) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+
+  <!-- 
+    🛠️ LUMINA NETWORK PATCH 🛠️
+    Problem: Nginx servers often serve .yml files as 'application/octet-stream' by default.
+    Issue: Decap CMS strictly throws an error if Content-Type is not 'text/yaml' or 'text/plain'.
+    Solution: We intercept the fetch request, get the file, and rewrite the header client-side.
+  -->
+  <script>
+    (function() {
+      // 1. Save the original fetch function
+      const originalFetch = window.fetch;
+
+      // 2. Overwrite window.fetch
+      window.fetch = async function(input, init) {
+        const url = typeof input === 'string' ? input : input.url;
+        
+        // 3. Detect request for config.yml
+        if (url && url.includes('config.yml')) {
+          console.log('[Lumina Patch] Intercepting config.yml request...');
+          try {
+            // 4. Perform the actual network request
+            const response = await originalFetch(input, init);
+            
+            // 5. Clone the raw data (Headers are read-only on the original response)
+            const body = await response.blob();
+            const newHeaders = new Headers(response.headers);
+            
+            // 6. FORCE the correct MIME type
+            newHeaders.set('Content-Type', 'text/yaml');
+            console.log('[Lumina Patch] Successfully patched Content-Type to text/yaml');
+            
+            // 7. Return the new, valid response to CMS
+            return new Response(body, {
+              status: response.status,
+              statusText: response.statusText,
+              headers: newHeaders
+            });
+          } catch (err) {
+            console.error('[Lumina Patch] Network error during interception:', err);
+            // Fallback to original behavior if something explodes
+            return originalFetch(input, init);
+          }
+        }
+        
+        // Pass through all other requests (GitHub API, Images, etc.) normally
+        return originalFetch(input, init);
+      };
+    })();
+  </script>
 </head>
 <body>
-  <div id="login-status">Initializing...</div>
-
-  <script>
-    // 1. Disable auto-init so we can handle the config loading manually
-    window.CMS_MANUAL_INIT = true;
-  </script>
+  <div class="loading-container">
+    <div class="loading-spinner"></div>
+    <div>Initializing Laboratory...</div>
+  </div>
   
-  <!-- 2. Load Decap CMS -->
+  <!-- Decap CMS Script (Restored to Automatic Mode) -->
   <script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
-  
-  <script>
-    const status = document.getElementById('login-status');
-    const log = (msg) => { console.log("[Lumina CMS]", msg); status.innerText = msg; status.style.display = 'block'; };
-
-    log("Starting manual boot sequence...");
-
-    // 3. Manually fetch config.yml as TEXT.
-    // This bypasses the Nginx "application/octet-stream" error because we ignore the header.
-    fetch('config.yml?v=' + Date.now()) // Add timestamp to bust cache
-      .then(response => {
-        log("Config file found. Downloading...");
-        return response.text(); 
-      })
-      .then(yamlText => {
-        try {
-          log("Parsing configuration...");
-          // 4. Parse the YAML text into a JavaScript object
-          const config = jsyaml.load(yamlText);
-          
-          // 5. Initialize the CMS with the parsed config
-          CMS.init({ config });
-          log("CMS Initialized.");
-          setTimeout(() => { status.style.display = 'none'; }, 2000);
-        } catch (e) {
-          console.error(e);
-          document.body.innerHTML = '<div style="color:red; padding:20px;"><h1>Config Error</h1><p>Failed to parse config.yml. Check console for details.</p><pre>' + e.message + '</pre></div>';
-        }
-      })
-      .catch(error => {
-        console.error(error);
-        document.body.innerHTML = '<div style="color:red; padding:20px;"><h1>Load Error</h1><p>Failed to load config.yml.</p><pre>' + error.message + '</pre></div>';
-      });
-  </script>
 </body>
 </html>
