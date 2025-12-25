@@ -2,10 +2,13 @@ backend:
   name: github
   repo: uschan/lumina
   branch: main
-  # ⬇️ VPS OAUTH CONFIGURATION ⬇️
-  base_url: https://gemini.wildsalt.me/oauth
-  auth_endpoint: auth
-  # ⬆️ ----------------------- ⬆️
+  # ⬇️ EXPLICIT VPS CONFIGURATION ⬇️
+  # Use the root domain as base_url
+  base_url: https://gemini.wildsalt.me
+  # Explicitly state the full path from root. 
+  # This maps to https://gemini.wildsalt.me/oauth/auth
+  auth_endpoint: oauth/auth
+  # ⬆️ --------------------------- ⬆️
 
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"

@@ -22,7 +22,6 @@
   <script>
     // 🛠️ LUMINA NETWORK PATCH 🛠️
     // Intercept config.yml request to ensure correct Content-Type (text/yaml)
-    // This fixes issues where some servers serve YAML as text/plain or octet-stream
     (function() {
       const originalFetch = window.fetch;
       window.fetch = async function(input, init) {
@@ -55,7 +54,7 @@
     <div style="font-size: 12px; font-family: monospace; opacity: 0.5;">INITIALIZING SECURE LINK</div>
   </div>
   
-  <!-- Use stable version of Decap CMS -->
-  <script src="https://unpkg.com/decap-cms@3.3.3/dist/decap-cms.js"></script>
+  <!-- Use latest unpkg distribution to ensure maximum compatibility -->
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>

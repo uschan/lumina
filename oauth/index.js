@@ -9,12 +9,13 @@ const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
 const AUTHORIZATION_URL = 'https://github.com/login/oauth/authorize';
 const TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
-// Helper: Redirect to GitHub
+// --- HANDLERS ---
+
 const handleAuth = (req, res) => {
+  // Redirect to GitHub
   res.redirect(`${AUTHORIZATION_URL}?client_id=${CLIENT_ID}&scope=repo,user`);
 };
 
-// Helper: Handle Callback
 const handleCallback = async (req, res) => {
   const { code } = req.query;
 
@@ -42,33 +43,41 @@ const handleCallback = async (req, res) => {
       provider: 'github'
     };
 
-    // CRITICAL FIX: Only stringify ONCE.
-    // Previous error: JSON.stringify(JSON.stringify(content)) created a string-escaped string, 
-    // causing Decap CMS to fail parsing the JSON object.
+    // Prepare the message string
+    // NOTE: This JSON.stringify is correct. It produces '{"token":"...","provider":"github"}'
+    // Decap CMS expects: "authorization:github:success:" + JSON_STRING
     const message = "authorization:github:success:" + JSON.stringify(content);
 
+    // HTML Response
+    // We send the message MULTIPLE times to ensure the parent window catches it (race condition fix)
+    // We keep the window open for 2 seconds to allow visual confirmation and script execution
     const script = `
       <!DOCTYPE html>
       <html>
-      <body style="background-color: #111; color: #444; font-family: sans-serif; text-align: center; display: flex; height: 100vh; align-items: center; justify-content: center;">
-        <p>Connecting...</p>
+      <body style="background-color: #09090b; color: #e4e4e7; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+        <div style="font-size: 24px; margin-bottom: 20px;">✅ Connecting...</div>
+        <div style="color: #71717a;">Do not close this window.</div>
         <script>
           (function() {
-            try {
-              const message = ${JSON.stringify(message)};
-              
+            const message = ${JSON.stringify(message)};
+            
+            function sendMessage() {
               if (window.opener) {
+                console.log("Sending auth message to opener...");
                 window.opener.postMessage(message, "*");
-                // Small delay to ensure the main window event loop processes the message
-                setTimeout(function() {
-                  window.close();
-                }, 500);
-              } else {
-                document.body.innerText = "Error: Connection lost. Close this and try again.";
               }
-            } catch (err) {
-              console.error(err);
             }
+
+            // Strategy: Send immediately, then retry a few times to be safe
+            sendMessage();
+            setTimeout(sendMessage, 500);
+            setTimeout(sendMessage, 1000);
+            setTimeout(sendMessage, 1500);
+
+            // Close after 2.5 seconds - giving plenty of time for CMS to react
+            setTimeout(function() {
+              window.close();
+            }, 2500);
           })();
         </script>
       </body>
@@ -84,6 +93,8 @@ const handleCallback = async (req, res) => {
 };
 
 // --- ROUTES ---
+// We listen on ALL variants to be safe against Nginx config differences
+// (e.g. proxy_pass with or without trailing slash)
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
 app.get('/oauth/auth', handleAuth);
