@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Terminal, Wifi, Battery, Cpu, Globe, Twitter, Github, Instagram, Cloud, CreditCard, Gamepad2, Sparkles, Languages } from 'lucide-react';
+import { ArrowRight, Terminal, Wifi, Cpu, Globe, Twitter, Github, Instagram, Cloud, CreditCard, Gamepad2, Sparkles, Languages } from 'lucide-react';
 import { Language } from '../types';
 
 interface LandingProps {
@@ -116,55 +116,56 @@ const Landing: React.FC<LandingProps> = ({ lang, toggleLang }) => {
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#050505] text-white selection:bg-indigo-500 selection:text-white">
+    // Use h-[100dvh] for mobile browser address bar compatibility
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-[#050505] text-white selection:bg-indigo-500 selection:text-white flex flex-col">
       {/* Canvas Background */}
       <canvas ref={canvasRef} className="absolute inset-0 z-0" />
       
       {/* Vignette Overlay */}
       <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_0%,#000000_100%)] pointer-events-none" />
 
-      {/* Main Content */}
-      <div className="relative z-20 h-full flex flex-col items-center justify-center px-4">
+      {/* Main Content Area - Flex Grow to push Footer down */}
+      <div className="relative z-20 flex-1 flex flex-col items-center justify-center px-4 w-full min-h-0">
         
         <motion.div
            initial={{ opacity: 0, scale: 0.9 }}
            animate={{ opacity: 1, scale: 1 }}
            transition={{ duration: 1 }}
-           className="text-center space-y-8"
+           className="text-center flex flex-col items-center gap-6 sm:gap-8 md:gap-10"
         >
-          {/* Glitchy Title */}
+          {/* Glitchy Title - Responsive Text Sizes */}
           <div className="relative">
-             <h1 className="text-6xl md:text-9xl font-bold tracking-tighter mix-blend-screen relative inline-block">
+             <h1 className="text-5xl sm:text-7xl md:text-9xl font-bold tracking-tighter mix-blend-screen relative inline-block">
                LUMINA
                <span className="absolute -inset-1 animate-pulse opacity-20 text-indigo-500 blur-lg select-none">LUMINA</span>
              </h1>
-             <div className="text-xs md:text-sm font-mono text-indigo-400 mt-2 tracking-[0.5em] uppercase opacity-80">
+             <div className="text-[10px] sm:text-xs md:text-sm font-mono text-indigo-400 mt-2 tracking-[0.3em] sm:tracking-[0.5em] uppercase opacity-80">
                {lang === 'en' ? 'Digital Laboratory' : '数字实验室'}
              </div>
           </div>
 
-          {/* Slogan */}
-          <p className="max-w-md mx-auto text-gray-400 font-light text-sm md:text-base leading-relaxed h-12">
+          {/* Slogan - Limited Width for Readability */}
+          <p className="max-w-[280px] sm:max-w-md mx-auto text-gray-400 font-light text-xs sm:text-sm md:text-base leading-relaxed h-10 sm:h-12 flex items-center justify-center">
              {lang === 'en' 
                ? "Exploring the void between 0 and 1. Crafting poetry for machines."
                : "探索 0 与 1 之间的虚空。为机器谱写诗篇。"}
           </p>
 
-          {/* The "Switch" Button */}
+          {/* The "Switch" Button - Compact padding on mobile */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleEnter}
-            className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/50 rounded-full backdrop-blur-md transition-all duration-300"
+            className="group relative inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/50 rounded-full backdrop-blur-md transition-all duration-300"
           >
-             <span className="relative flex h-3 w-3">
+             <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+                <span className="relative inline-flex rounded-full h-full w-full bg-indigo-500"></span>
              </span>
-             <span className="font-mono text-sm tracking-widest uppercase">
+             <span className="font-mono text-xs sm:text-sm tracking-widest uppercase">
                {lang === 'en' ? 'Enter System' : '进入系统'}
              </span>
-             <ArrowRight size={16} className="text-indigo-400 group-hover:translate-x-1 transition-transform" />
+             <ArrowRight size={14} className="text-indigo-400 group-hover:translate-x-1 transition-transform sm:w-4 sm:h-4" />
              
              {/* Button Glow */}
              <div className="absolute inset-0 rounded-full ring-1 ring-white/20 group-hover:ring-indigo-500/50 transition-all duration-500" />
@@ -172,17 +173,17 @@ const Landing: React.FC<LandingProps> = ({ lang, toggleLang }) => {
         </motion.div>
       </div>
 
-      {/* Footer / Terminal Status */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 p-6 flex flex-col md:flex-row justify-between items-end pointer-events-none gap-4">
+      {/* Footer / Terminal Status - Shrink-0 to prevent collapsing */}
+      <div className="relative z-30 p-4 sm:p-6 flex flex-col md:flex-row justify-end md:justify-between items-center md:items-end gap-4 shrink-0 w-full bg-gradient-to-t from-black/80 via-black/0 to-transparent">
         
-        {/* Terminal Output - Hidden on small screens to save space */}
+        {/* Terminal Output - Hidden on Mobile/Tablet to save space */}
         <div className="hidden lg:block font-mono text-[10px] text-green-500/80 leading-tight bg-black/50 p-4 rounded-lg border border-white/5 backdrop-blur-sm max-w-sm">
            <div className="flex items-center gap-2 mb-2 text-gray-500 border-b border-white/10 pb-1">
              <Terminal size={10} />
              <span>TERMINAL_OUTPUT</span>
            </div>
            {terminalLines.map((line, i) => (
-             <div key={i} className="animate-fade-in">
+             <div key={i} className="animate-fade-in truncate">
                <span className="mr-2 opacity-50">{`>`}</span>
                {line}
              </div>
@@ -192,9 +193,9 @@ const Landing: React.FC<LandingProps> = ({ lang, toggleLang }) => {
 
         <div className="w-full flex flex-col items-center md:items-end gap-3 pointer-events-auto">
             
-            {/* Social Media Dock */}
-            <div className="flex items-center gap-2 text-gray-400 bg-black/50 px-3 py-2 rounded-full border border-white/5 backdrop-blur-sm shadow-xl">
-               <SocialIcon href="https://x.com/uschan2" icon={<Twitter size={14} />} label="X (Twitter)" />
+            {/* Social Media Dock - Scaled down on Mobile */}
+            <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 bg-black/50 px-3 py-2 rounded-full border border-white/5 backdrop-blur-sm shadow-xl scale-90 sm:scale-100 origin-bottom">
+               <SocialIcon href="https://x.com/uschan" icon={<Twitter size={14} />} label="X (Twitter)" />
                <SocialIcon href="https://github.com/uschan" icon={<Github size={14} />} label="GitHub" />
                <SocialIcon href="https://www.instagram.com/bujjun" icon={<Instagram size={14} />} label="Instagram" />
                <SocialIcon href="https://bsky.app/profile/wildsalt.bsky.social" icon={<Cloud size={14} />} label="Bluesky" />
@@ -204,31 +205,34 @@ const Landing: React.FC<LandingProps> = ({ lang, toggleLang }) => {
                <SocialIcon href="https://wildsalt.me/" icon={<Sparkles size={14} />} label="WildSalt" activeColor="text-amber-400" />
             </div>
 
-            {/* Status Indicators & Language Toggle */}
-            <div className="flex items-center gap-4 text-[10px] text-gray-500 font-mono bg-black/50 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                  <Globe size={12} />
+            {/* Status Indicators & Language Toggle - Compact on Mobile */}
+            <div className="flex items-center gap-3 sm:gap-4 text-[9px] sm:text-[10px] text-gray-500 font-mono bg-black/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/5 backdrop-blur-sm">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Globe size={10} className="sm:w-3 sm:h-3" />
                   <span>EARTH_616</span>
               </div>
-              <div className="w-px h-3 bg-gray-700" />
-              <div className="flex items-center gap-2">
-                  <Wifi size={12} className="text-indigo-500" />
+              <div className="w-px h-2 sm:h-3 bg-gray-700" />
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Wifi size={10} className="text-indigo-500 sm:w-3 sm:h-3" />
                   <span>CONNECTED</span>
               </div>
-              <div className="w-px h-3 bg-gray-700" />
+              
+              {/* Hide Version on very small screens */}
+              <div className="w-px h-2 sm:h-3 bg-gray-700 hidden sm:block" />
               <div className="hidden sm:flex items-center gap-2">
                   <Cpu size={12} />
                   <span>v.2.0.4</span>
               </div>
-              <div className="w-px h-3 bg-gray-700 hidden sm:block" />
+              
+              <div className="w-px h-2 sm:h-3 bg-gray-700" />
               
               {/* Language Toggle */}
               <button 
                 onClick={toggleLang}
-                className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer group"
+                className="flex items-center gap-1.5 sm:gap-2 hover:text-white transition-colors cursor-pointer group"
                 title="Switch Language"
               >
-                 <Languages size={12} className="group-hover:text-indigo-400 transition-colors" />
+                 <Languages size={10} className="group-hover:text-indigo-400 transition-colors sm:w-3 sm:h-3" />
                  <span className={lang === 'en' ? 'text-white font-bold' : ''}>EN</span>
                  <span>/</span>
                  <span className={lang === 'zh' ? 'text-white font-bold' : ''}>中</span>
@@ -245,7 +249,7 @@ const SocialIcon = ({ href, icon, label, activeColor = "text-indigo-400" }: { hr
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className={`p-2 rounded-full hover:bg-white/10 hover:${activeColor} transition-all duration-300 hover:scale-110`}
+    className={`p-1.5 sm:p-2 rounded-full hover:bg-white/10 hover:${activeColor} transition-all duration-300 hover:scale-110`}
     title={label}
   >
     {icon}
