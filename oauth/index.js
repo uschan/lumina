@@ -19,7 +19,7 @@ const handleCallback = async (req, res) => {
   const { code } = req.query;
 
   if (!code) {
-    return res.status(400).send('No code received');
+    return res.status(400).send('Error: No code received from GitHub.');
   }
 
   try {
@@ -32,10 +32,15 @@ const handleCallback = async (req, res) => {
       headers: { Accept: 'application/json' },
     });
 
+    // GitHub sometimes returns 200 OK but with an "error" field in the body
+    if (response.data.error) {
+       throw new Error(`GitHub Error: ${response.data.error_description || response.data.error}`);
+    }
+
     const { access_token } = response.data;
     
     if (!access_token) {
-      return res.status(500).send('Failed to obtain access token from GitHub');
+      throw new Error('No access_token found in response');
     }
 
     const provider = 'github'; 
@@ -56,7 +61,7 @@ const handleCallback = async (req, res) => {
            body {
              background-color: #09090b;
              color: #e4e4e7;
-             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+             font-family: monospace;
              display: flex;
              flex-direction: column;
              align-items: center;
@@ -73,109 +78,83 @@ const handleCallback = async (req, res) => {
              border-radius: 1rem;
              max-width: 400px;
              width: 100%;
-             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
            }
-           h2 { color: #818cf8; margin-top: 0; font-size: 1.25rem; }
-           p { color: #a1a1aa; font-size: 0.875rem; line-height: 1.5; margin-bottom: 1.5rem; }
-           .status-line { margin-top: 1rem; font-size: 0.75rem; color: #71717a; }
+           h2 { color: #10b981; margin-top: 0; }
+           p { color: #a1a1aa; font-size: 0.9rem; margin-bottom: 1.5rem; }
            
            button {
-             background: #4f46e5;
+             background: #27272a;
              color: white;
-             border: none;
+             border: 1px solid #3f3f46;
              padding: 0.75rem 1.5rem;
              border-radius: 0.5rem;
-             font-size: 0.875rem;
-             font-weight: 600;
              cursor: pointer;
              width: 100%;
-             transition: all 0.2s;
+             margin-top: 10px;
            }
-           button:hover { background: #4338ca; }
-           
-           .error-box {
+           button:hover { background: #3f3f46; }
+
+           .debug-log {
              margin-top: 1rem;
-             padding: 0.75rem;
-             background: rgba(239, 68, 68, 0.1);
-             border: 1px solid rgba(239, 68, 68, 0.2);
-             color: #ef4444;
-             border-radius: 0.5rem;
-             font-size: 0.75rem;
-             display: none;
+             font-size: 0.7rem;
+             color: #52525b;
              text-align: left;
+             width: 100%;
+             overflow-wrap: break-word;
            }
         </style>
       </head>
       <body>
         <div class="card">
-          <h2>🔐 Verifying Credentials</h2>
-          <p id="msg">Establishing secure uplink to Lumina CMS...</p>
+          <h2>✅ Authorization Granted</h2>
+          <p id="msg">Broadcasting credentials to Lumina CMS...</p>
           
-          <button id="btn" onclick="retryHandshake()">Retry Handshake</button>
-          
-          <div id="error-log" class="error-box"></div>
-          <div class="status-line">Token acquired. Waiting for parent window.</div>
+          <!-- Manual fallback buttons -->
+          <button onclick="handshake()">Resend Signal</button>
+          <button onclick="window.close()">Close Window</button>
+
+          <div id="log" class="debug-log"></div>
         </div>
 
         <script>
           const content = ${JSON.stringify(content)};
           const provider = "${provider}";
-          // Standard Decap CMS message format
           const message = "authorization:" + provider + ":success:" + JSON.stringify(content);
-          const targetOrigin = window.location.origin; // Matches https://gemini.wildsalt.me
+          
+          // USE WILDCARD TO ENSURE MESSAGE DELIVERY
+          // This fixes issues where protocol (http vs https) or subdomains might differ slightly
+          const targetOrigin = "*";
 
-          function logError(txt) {
-            const el = document.getElementById('error-log');
-            el.style.display = 'block';
-            el.innerText += "> " + txt + "\\n";
-          }
-
-          function status(txt) {
-            document.getElementById('msg').innerText = txt;
+          function log(txt) {
+            console.log(txt);
+            document.getElementById('log').innerText = txt;
           }
 
           function handshake() {
             try {
               if (!window.opener) {
-                logError("CRITICAL: 'window.opener' is null.");
-                logError("Did you close the main tab?");
-                logError("Try closing this popup and clicking Login again.");
-                status("Connection Lost");
+                document.getElementById('msg').innerText = "Error: Parent window lost.";
+                document.getElementById('msg').style.color = "#ef4444";
                 return;
               }
 
-              status("Transmitting credentials...");
-
-              // 1. Send to Exact Origin (Most Secure/Reliable for same-domain)
+              log("Sending postMessage to parent window...");
               window.opener.postMessage(message, targetOrigin);
               
-              // 2. Send to Wildcard (Fallback)
-              window.opener.postMessage(message, "*");
-
-              status("Success! Redirecting...");
+              document.getElementById('msg').innerText = "Signal sent. You can close this window.";
               
-              // Visual feedback
-              const btn = document.getElementById('btn');
-              btn.innerText = "Login Successful";
-              btn.style.backgroundColor = "#10b981";
-              
-              // Close after a clear delay so user sees success
+              // Close automatically after a short delay
               setTimeout(() => {
                 window.close();
-              }, 1500);
+              }, 1200);
 
             } catch (e) {
-              logError("Exception: " + e.message);
+              log("Exception: " + e.message);
             }
           }
 
-          // Start automatically, but with a slight delay to ensure browser is ready
-          setTimeout(handshake, 800);
-
-          function retryHandshake() {
-            logError("Retrying manual handshake...");
-            handshake();
-          }
+          // Execute immediately
+          handshake();
         </script>
       </body>
       </html>
@@ -184,12 +163,17 @@ const handleCallback = async (req, res) => {
     res.send(script);
   } catch (error) {
     console.error('Auth Error:', error.message);
-    res.status(500).send(`Authentication failed: ${error.message}`);
+    res.status(500).send(`
+      <body style="background:#09090b;color:#ef4444;font-family:monospace;padding:2rem;">
+        <h2>Authentication Failed</h2>
+        <p>${error.message}</p>
+        <p>Please close this window and try again.</p>
+      </body>
+    `);
   }
 };
 
 // --- ROUTE DEFINITIONS ---
-// Handle both root relative and full path routing
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
 app.get('/oauth/auth', handleAuth);
