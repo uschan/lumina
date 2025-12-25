@@ -37,35 +37,44 @@ app.get('/callback', async (req, res) => {
     const { access_token } = response.data;
     
     if (!access_token) {
-      console.error('GitHub response:', response.data);
+      console.error('GitHub response error:', response.data);
       return res.status(500).send('Failed to obtain access token');
     }
 
-    // Construct the postMessage content expected by Decap/Netlify CMS
     const provider = 'github'; 
     const content = {
       token: access_token,
       provider: provider
     };
 
-    // Return HTML that posts the message back to the main window and closes the popup
+    // Message format required by Decap CMS
+    const message = `authorization:${provider}:success:${JSON.stringify(content)}`;
+
+    // Return HTML with script to pass message to opener
+    // We use JSON.stringify(message) to ensure safe JS string escaping
     const script = `
       <!DOCTYPE html>
       <html>
+      <head><title>Authenticating...</title></head>
       <body>
+      <p>Authentication successful. Closing...</p>
       <script>
         (function() {
-          function receiveMessage(e) {
-            console.log("Authentication successful", e);
-            
+          try {
             // Send message to the main window (CMS)
             window.opener.postMessage(
-              'authorization:${provider}:success:${JSON.stringify(content)}', 
+              ${JSON.stringify(message)}, 
               '*'
             );
-            window.close();
+            console.log("Message sent to opener");
+          } catch (err) {
+            console.error("Error sending message:", err);
           }
-          receiveMessage();
+          
+          // Add a small delay before closing to ensure message is processed
+          setTimeout(function() {
+            window.close();
+          }, 200);
         })();
       </script>
       </body>
@@ -75,7 +84,7 @@ app.get('/callback', async (req, res) => {
     res.send(script);
   } catch (error) {
     console.error('Access Token Error:', error.message);
-    res.status(500).send('Authentication failed');
+    res.status(500).send(`Authentication failed: ${error.message}`);
   }
 });
 
