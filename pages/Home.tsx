@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Github, Twitter, Instagram, Cloud, Sparkles, Lock } from 'lucide-react';
+import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Github, Twitter, Instagram, Cloud, Sparkles, Lock, Radio, ExternalLink } from 'lucide-react';
 import { BentoContainer, BentoItem } from '../components/BentoGrid';
 import ProjectCard from '../components/ProjectCard';
 import SupportWidget from '../components/SupportWidget';
@@ -228,6 +228,24 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
               <span className="text-5xl font-mono font-bold text-indigo-500 mb-2">35+</span>
               <span className="text-xs uppercase tracking-widest text-muted-foreground">Prototypes Deployed</span>
            </BentoItem>
+
+           {/* Friends / Signals Section */}
+           <BentoItem colSpan={12} className="p-6 md:p-8 bg-card/10 border-t border-border/50">
+               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                   <div className="flex items-center gap-2 text-muted-foreground shrink-0">
+                       <Radio size={16} className="text-emerald-500 animate-pulse" />
+                       <span className="text-xs font-mono uppercase tracking-widest">
+                          {lang === 'en' ? 'Signal Network' : '友情链接'}
+                       </span>
+                   </div>
+                   
+                   <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-8">
+                       <FriendLink href="https://sonder.study/" label="小词大意" />
+                       <FriendLink href="https://monoaware.top/" label="深度拆解实验室" />
+                   </div>
+               </div>
+           </BentoItem>
+
         </BentoContainer>
 
       </div>
@@ -245,6 +263,18 @@ const SocialButton = ({ icon, href, label }: { icon: React.ReactNode, href: stri
   >
     {icon}
   </a>
+);
+
+const FriendLink = ({ href, label }: { href: string, label: string }) => (
+    <a 
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+    >
+        <span>{label}</span>
+        <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 -translate-y-0.5 translate-x-0.5 transition-all text-indigo-500" />
+    </a>
 );
 
 export default Home;

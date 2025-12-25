@@ -44,19 +44,23 @@ const handleCallback = async (req, res) => {
     };
 
     // Prepare the message string
-    // NOTE: This JSON.stringify is correct. It produces '{"token":"...","provider":"github"}'
-    // Decap CMS expects: "authorization:github:success:" + JSON_STRING
     const message = "authorization:github:success:" + JSON.stringify(content);
 
-    // HTML Response
-    // We send the message MULTIPLE times to ensure the parent window catches it (race condition fix)
-    // We keep the window open for 2 seconds to allow visual confirmation and script execution
+    // HTML Response with Visual Token
+    // We display the token so you can manually copy it if the window closes too fast or postMessage fails.
     const script = `
       <!DOCTYPE html>
       <html>
-      <body style="background-color: #09090b; color: #e4e4e7; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0;">
-        <div style="font-size: 24px; margin-bottom: 20px;">✅ Connecting...</div>
-        <div style="color: #71717a;">Do not close this window.</div>
+      <body style="background-color: #09090b; color: #e4e4e7; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 20px;">✅ Login Successful</div>
+        <div style="color: #71717a; margin-bottom: 20px;">Sending credentials to Lumina...</div>
+        
+        <!-- Debugging: Show Token -->
+        <div style="background: #18181b; padding: 15px; border-radius: 8px; border: 1px solid #27272a; margin-bottom: 20px; max-width: 90%; word-break: break-all;">
+            <div style="font-size: 10px; color: #71717a; margin-bottom: 5px;">DEBUG TOKEN (COPY IF NEEDED)</div>
+            <code style="color: #4ade80; font-size: 12px;">${access_token}</code>
+        </div>
+
         <script>
           (function() {
             const message = ${JSON.stringify(message)};
@@ -68,16 +72,14 @@ const handleCallback = async (req, res) => {
               }
             }
 
-            // Strategy: Send immediately, then retry a few times to be safe
+            // Retry strategy
             sendMessage();
-            setTimeout(sendMessage, 500);
-            setTimeout(sendMessage, 1000);
-            setTimeout(sendMessage, 1500);
+            setInterval(sendMessage, 800);
 
-            // Close after 2.5 seconds - giving plenty of time for CMS to react
+            // Close automatically after 5 seconds (Increased time to allow copying if needed)
             setTimeout(function() {
               window.close();
-            }, 2500);
+            }, 5000);
           })();
         </script>
       </body>
@@ -93,8 +95,6 @@ const handleCallback = async (req, res) => {
 };
 
 // --- ROUTES ---
-// We listen on ALL variants to be safe against Nginx config differences
-// (e.g. proxy_pass with or without trailing slash)
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
 app.get('/oauth/auth', handleAuth);
