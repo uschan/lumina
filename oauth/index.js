@@ -42,31 +42,29 @@ const handleCallback = async (req, res) => {
       provider: 'github'
     };
 
-    // CRITICAL FIX: 
-    // 1. Send the message immediately.
-    // 2. Wait 800ms before closing. This allows the parent window's event loop
-    //    to process the message before the source window is destroyed.
+    // CRITICAL FIX: Only stringify ONCE.
+    // Previous error: JSON.stringify(JSON.stringify(content)) created a string-escaped string, 
+    // causing Decap CMS to fail parsing the JSON object.
+    const message = "authorization:github:success:" + JSON.stringify(content);
+
     const script = `
       <!DOCTYPE html>
       <html>
-      <body style="background-color: #111; color: #eee; font-family: monospace; text-align: center; padding-top: 50px;">
-        <p>Authenticating...</p>
+      <body style="background-color: #111; color: #444; font-family: sans-serif; text-align: center; display: flex; height: 100vh; align-items: center; justify-content: center;">
+        <p>Connecting...</p>
         <script>
           (function() {
             try {
-              // Standard Decap CMS message format
-              const message = "authorization:github:success:" + ${JSON.stringify(JSON.stringify(content))};
+              const message = ${JSON.stringify(message)};
               
               if (window.opener) {
-                // Send content to parent
                 window.opener.postMessage(message, "*");
-                
-                // Keep window open briefly to ensure message processing
+                // Small delay to ensure the main window event loop processes the message
                 setTimeout(function() {
                   window.close();
-                }, 800);
+                }, 500);
               } else {
-                document.body.innerText = "Error: Parent window lost. Please try again.";
+                document.body.innerText = "Error: Connection lost. Close this and try again.";
               }
             } catch (err) {
               console.error(err);
@@ -86,7 +84,6 @@ const handleCallback = async (req, res) => {
 };
 
 // --- ROUTES ---
-// Handle both root-relative and /oauth-prefixed routes to be safe behind proxies
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
 app.get('/oauth/auth', handleAuth);
