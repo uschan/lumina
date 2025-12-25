@@ -9,21 +9,20 @@ const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
 const AUTHORIZATION_URL = 'https://github.com/login/oauth/authorize';
 const TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
-// 1. Redirect to GitHub
+// Helper: Redirect to GitHub
 const handleAuth = (req, res) => {
   res.redirect(`${AUTHORIZATION_URL}?client_id=${CLIENT_ID}&scope=repo,user`);
 };
 
-// 2. Handle GitHub Callback
+// Helper: Handle Callback
 const handleCallback = async (req, res) => {
   const { code } = req.query;
 
   if (!code) {
-    return res.send('<script>alert("Error: No code received from GitHub");</script>');
+    return res.status(400).send('Error: No code received from GitHub.');
   }
 
   try {
-    // Exchange code for token
     const response = await axios.post(TOKEN_URL, {
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
@@ -33,33 +32,49 @@ const handleCallback = async (req, res) => {
     });
 
     const { access_token } = response.data;
-    
+
     if (!access_token) {
       throw new Error('No access_token found');
     }
 
-    // Construct the message object expected by Decap CMS
     const content = {
       token: access_token,
       provider: 'github'
     };
 
-    // The message format MUST be exactly: "authorization:provider:success:JSON_STRING"
-    // We use a safe script injection to execute this in the browser.
-    // origin "*" allows it to work on any domain (localhost, IP, or domain).
+    // CRITICAL FIX: 
+    // 1. Send the message immediately.
+    // 2. Wait 800ms before closing. This allows the parent window's event loop
+    //    to process the message before the source window is destroyed.
     const script = `
-      <script>
-        (function() {
-          try {
-            const message = "authorization:github:success:" + ${JSON.stringify(JSON.stringify(content))};
-            window.opener.postMessage(message, "*");
-            window.close();
-          } catch (err) {
-            console.error(err);
-            document.body.innerText = "Error sending token to CMS window.";
-          }
-        })();
-      </script>
+      <!DOCTYPE html>
+      <html>
+      <body style="background-color: #111; color: #eee; font-family: monospace; text-align: center; padding-top: 50px;">
+        <p>Authenticating...</p>
+        <script>
+          (function() {
+            try {
+              // Standard Decap CMS message format
+              const message = "authorization:github:success:" + ${JSON.stringify(JSON.stringify(content))};
+              
+              if (window.opener) {
+                // Send content to parent
+                window.opener.postMessage(message, "*");
+                
+                // Keep window open briefly to ensure message processing
+                setTimeout(function() {
+                  window.close();
+                }, 800);
+              } else {
+                document.body.innerText = "Error: Parent window lost. Please try again.";
+              }
+            } catch (err) {
+              console.error(err);
+            }
+          })();
+        </script>
+      </body>
+      </html>
     `;
 
     res.send(script);
@@ -70,7 +85,8 @@ const handleCallback = async (req, res) => {
   }
 };
 
-// --- ROUTE DEFINITIONS ---
+// --- ROUTES ---
+// Handle both root-relative and /oauth-prefixed routes to be safe behind proxies
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
 app.get('/oauth/auth', handleAuth);

@@ -21,19 +21,17 @@
 
   <script>
     // 🛠️ LUMINA NETWORK PATCH 🛠️
-    // Intercept config.yml to fix MIME type
+    // Intercept config.yml to fix MIME type (Required for strict MIME checking environments)
     (function() {
       const originalFetch = window.fetch;
       window.fetch = async function(input, init) {
         const url = typeof input === 'string' ? input : input.url;
         if (url && url.includes('config.yml')) {
-          console.log('[Lumina Patch] Intercepting config.yml request...');
           try {
             const response = await originalFetch(input, init);
             const body = await response.blob();
             const newHeaders = new Headers(response.headers);
             newHeaders.set('Content-Type', 'text/yaml');
-            console.log('[Lumina Patch] Successfully patched Content-Type to text/yaml');
             return new Response(body, {
               status: response.status,
               statusText: response.statusText,
@@ -47,17 +45,6 @@
         return originalFetch(input, init);
       };
     })();
-
-    // 🛠️ OAUTH DEBUG LISTENER 🛠️
-    // This prints ANY message received from the popup to the console
-    window.addEventListener("message", (event) => {
-      console.log("[Lumina Auth Debug] Message received from:", event.origin);
-      console.log("[Lumina Auth Debug] Data:", event.data);
-      
-      if (typeof event.data === "string" && event.data.startsWith("authorization:github:success")) {
-         console.log("✅ Valid auth string detected! CMS should login now.");
-      }
-    });
   </script>
 </head>
 <body>
@@ -66,6 +53,7 @@
     <div>Initializing Laboratory...</div>
   </div>
   
-  <script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
+  <!-- Use a specific, stable version of Decap CMS -->
+  <script src="https://unpkg.com/decap-cms@3.3.3/dist/decap-cms.js"></script>
 </body>
 </html>
