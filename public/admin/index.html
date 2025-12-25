@@ -4,6 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lumina Content Manager</title>
+  <style>
+    /* Fix Decap CMS UI font loading issues */
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  </style>
+  <script>
+    // Debug listener: Check browser console to see if message arrives
+    window.addEventListener("message", (event) => {
+      if (typeof event.data === 'string' && event.data.includes('authorization')) {
+        console.log("%c[Lumina Debug] Auth Message Received!", "color: green; font-weight: bold; font-size: 14px");
+        console.log("Payload:", event.data);
+      }
+    });
+  </script>
 </head>
 <body>
   <!-- Include the script that builds the page and powers Decap CMS -->
