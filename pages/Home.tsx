@@ -52,7 +52,7 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
   }, []);
 
   return (
-    <div className="relative min-h-screen pt-32 pb-20 px-4 sm:px-6">
+    <div className="relative min-h-screen pt-32 pb-10 px-4 sm:px-6">
       <SEO title="Home" description={t.hero.description} lang={lang} />
       
       {/* Background is now global in App.tsx */}
@@ -224,26 +224,27 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
               </div>
            </BentoItem>
 
-           <BentoItem colSpan={4} className="p-8 flex flex-col justify-center items-center text-center bg-indigo-500/5 border-indigo-500/20">
-              <span className="text-5xl font-mono font-bold text-indigo-500 mb-2">35+</span>
-              <span className="text-xs uppercase tracking-widest text-muted-foreground">Prototypes Deployed</span>
-           </BentoItem>
+           <BentoItem colSpan={4} className="p-6 flex flex-col justify-between items-center text-center bg-indigo-500/5 border-indigo-500/20">
+              <div className="flex flex-col items-center justify-center flex-grow py-2">
+                <span className="text-5xl font-mono font-bold text-indigo-500 mb-2">35+</span>
+                <span className="text-xs uppercase tracking-widest text-muted-foreground">Prototypes Deployed</span>
+              </div>
 
-           {/* Friends / Signals Section */}
-           <BentoItem colSpan={12} className="p-6 md:p-8 bg-card/10 border-t border-border/50">
-               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                   <div className="flex items-center gap-2 text-muted-foreground shrink-0">
-                       <Radio size={16} className="text-emerald-500 animate-pulse" />
-                       <span className="text-xs font-mono uppercase tracking-widest">
-                          {lang === 'en' ? 'Signal Network' : '友情链接'}
-                       </span>
+              {/* Integrated Signal Network */}
+              <div className="w-full pt-4 border-t border-indigo-500/10 flex flex-col items-center gap-3">
+                   <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/70">
+                       <Radio size={10} className="text-emerald-500 animate-pulse" />
+                       {lang === 'en' ? 'Signal Network' : '信号网络'}
                    </div>
-                   
-                   <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-8">
-                       <FriendLink href="https://sonder.study/" label="小词大意" />
-                       <FriendLink href="https://monoaware.top/" label="深度拆解实验室" />
+                   <div className="flex flex-wrap justify-center gap-2 w-full">
+                       <a href="https://sonder.study/" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-background/40 border border-indigo-500/10 hover:border-indigo-500/40 text-[11px] text-muted-foreground hover:text-indigo-500 transition-colors flex items-center gap-1 group">
+                          小词大意 <ExternalLink size={8} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                       </a>
+                       <a href="https://monoaware.top/" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-background/40 border border-indigo-500/10 hover:border-indigo-500/40 text-[11px] text-muted-foreground hover:text-indigo-500 transition-colors flex items-center gap-1 group">
+                          深度拆解 <ExternalLink size={8} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                       </a>
                    </div>
-               </div>
+              </div>
            </BentoItem>
 
         </BentoContainer>
@@ -263,18 +264,6 @@ const SocialButton = ({ icon, href, label }: { icon: React.ReactNode, href: stri
   >
     {icon}
   </a>
-);
-
-const FriendLink = ({ href, label }: { href: string, label: string }) => (
-    <a 
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-    >
-        <span>{label}</span>
-        <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 -translate-y-0.5 translate-x-0.5 transition-all text-indigo-500" />
-    </a>
 );
 
 export default Home;
