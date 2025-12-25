@@ -5,21 +5,114 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lumina Content Manager</title>
   <style>
-    /* Fix Decap CMS UI font loading issues */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   </style>
-  <script>
-    // Debug listener: Check browser console to see if message arrives
-    window.addEventListener("message", (event) => {
-      if (typeof event.data === 'string' && event.data.includes('authorization')) {
-        console.log("%c[Lumina Debug] Auth Message Received!", "color: green; font-weight: bold; font-size: 14px");
-        console.log("Payload:", event.data);
-      }
-    });
-  </script>
 </head>
 <body>
-  <!-- Include the script that builds the page and powers Decap CMS -->
+  <!-- 1. CRITICAL: Tell Decap CMS we will initialize it manually -->
+  <script>window.CMS_MANUAL_INIT = true;</script>
+  
+  <!-- 2. Load the CMS script -->
   <script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
+  
+  <!-- 3. Inject Configuration directly (Bypasses config.yml fetch errors) -->
+  <script>
+    const config = {
+      backend: {
+        name: 'github',
+        repo: 'uschan/lumina',
+        branch: 'main',
+        base_url: 'https://gemini.wildsalt.me/oauth',
+        auth_endpoint: 'auth',
+        site_url: 'https://gemini.wildsalt.me'
+      },
+      media_folder: "public/images/uploads",
+      public_folder: "/images/uploads",
+      collections: [
+        {
+          name: "content",
+          label: "Site Content",
+          files: [
+            {
+              name: "data",
+              label: "Database (data.json)",
+              file: "public/data.json",
+              description: "Manage all site content from this single file.",
+              fields: [
+                {
+                  label: "Projects",
+                  name: "projects",
+                  widget: "list",
+                  fields: [
+                    {label: "ID", name: "id", widget: "string", default: ""},
+                    {label: "Title", name: "title", widget: "string"},
+                    {label: "Featured", name: "featured", widget: "boolean", default: false},
+                    {label: "Description", name: "description", widget: "object", fields: [
+                      {label: "English", name: "en", widget: "text"},
+                      {label: "Chinese", name: "zh", widget: "text"}
+                    ]},
+                    {label: "Challenge (Optional)", name: "challenge", widget: "object", required: false, fields: [
+                      {label: "English", name: "en", widget: "text"},
+                      {label: "Chinese", name: "zh", widget: "text"}
+                    ]},
+                    {label: "Solution (Optional)", name: "solution", widget: "object", required: false, fields: [
+                      {label: "English", name: "en", widget: "text"},
+                      {label: "Chinese", name: "zh", widget: "text"}
+                    ]},
+                    {label: "Tech Stack Tags", name: "tags", widget: "list", default: ["React"]},
+                    {label: "Color Palette", name: "palette", widget: "list", required: false},
+                    {label: "Cover Image", name: "image", widget: "image"},
+                    {label: "Links", name: "links", widget: "object", fields: [
+                      {label: "GitHub URL", name: "github", widget: "string", required: false},
+                      {label: "Demo URL", name: "demo", widget: "string", required: false}
+                    ]}
+                  ]
+                },
+                {
+                  label: "Laboratory Log (Posts)",
+                  name: "posts",
+                  widget: "list",
+                  fields: [
+                    {label: "ID", name: "id", widget: "string"},
+                    {label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD", value_format: "YYYY-MM-DD"},
+                    {label: "Type", name: "type", widget: "select", options: ["insight", "brief"]},
+                    {label: "Read Time", name: "readTime", widget: "string", default: "5 min"},
+                    {label: "Title", name: "title", widget: "object", fields: [
+                      {label: "English", name: "en", widget: "string"},
+                      {label: "Chinese", name: "zh", widget: "string"}
+                    ]},
+                    {label: "Excerpt", name: "excerpt", widget: "object", fields: [
+                      {label: "English", name: "en", widget: "text"},
+                      {label: "Chinese", name: "zh", widget: "text"}
+                    ]},
+                    {label: "AI Analysis (Optional)", name: "aiAnalysis", widget: "object", required: false, fields: [
+                      {label: "English", name: "en", widget: "text"},
+                      {label: "Chinese", name: "zh", widget: "text"}
+                    ]},
+                    {label: "Content (Markdown)", name: "content", widget: "markdown"}
+                  ]
+                },
+                {
+                  label: "Workspace Tools",
+                  name: "tools",
+                  widget: "list",
+                  fields: [
+                    {label: "Name", name: "name", widget: "string"},
+                    {label: "Category", name: "category", widget: "string"},
+                    {label: "Description", name: "description", widget: "string"}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    // Initialize CMS with the config object directly
+    CMS.init({ config });
+    
+    console.log("[Lumina] CMS Initialized manually. Config loaded.");
+  </script>
 </body>
 </html>
