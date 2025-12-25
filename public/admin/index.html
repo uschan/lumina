@@ -6,113 +6,58 @@
   <title>Lumina Content Manager</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    #login-status {
+      position: fixed; top: 20px; right: 20px; 
+      padding: 10px 15px; background: rgba(0,0,0,0.8); color: white; 
+      border-radius: 8px; font-size: 12px; z-index: 9999; display: none;
+    }
   </style>
+  <!-- Load js-yaml to parse config client-side (This fixes the Content-Type error) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
 </head>
 <body>
-  <!-- 1. CRITICAL: Tell Decap CMS we will initialize it manually -->
-  <script>window.CMS_MANUAL_INIT = true;</script>
+  <div id="login-status">Initializing...</div>
+
+  <script>
+    // 1. Disable auto-init so we can handle the config loading manually
+    window.CMS_MANUAL_INIT = true;
+  </script>
   
-  <!-- 2. Load the CMS script -->
+  <!-- 2. Load Decap CMS -->
   <script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
   
-  <!-- 3. Inject Configuration directly (Bypasses config.yml fetch errors) -->
   <script>
-    const config = {
-      backend: {
-        name: 'github',
-        repo: 'uschan/lumina',
-        branch: 'main',
-        base_url: 'https://gemini.wildsalt.me/oauth',
-        auth_endpoint: 'auth',
-        site_url: 'https://gemini.wildsalt.me'
-      },
-      media_folder: "public/images/uploads",
-      public_folder: "/images/uploads",
-      collections: [
-        {
-          name: "content",
-          label: "Site Content",
-          files: [
-            {
-              name: "data",
-              label: "Database (data.json)",
-              file: "public/data.json",
-              description: "Manage all site content from this single file.",
-              fields: [
-                {
-                  label: "Projects",
-                  name: "projects",
-                  widget: "list",
-                  fields: [
-                    {label: "ID", name: "id", widget: "string", default: ""},
-                    {label: "Title", name: "title", widget: "string"},
-                    {label: "Featured", name: "featured", widget: "boolean", default: false},
-                    {label: "Description", name: "description", widget: "object", fields: [
-                      {label: "English", name: "en", widget: "text"},
-                      {label: "Chinese", name: "zh", widget: "text"}
-                    ]},
-                    {label: "Challenge (Optional)", name: "challenge", widget: "object", required: false, fields: [
-                      {label: "English", name: "en", widget: "text"},
-                      {label: "Chinese", name: "zh", widget: "text"}
-                    ]},
-                    {label: "Solution (Optional)", name: "solution", widget: "object", required: false, fields: [
-                      {label: "English", name: "en", widget: "text"},
-                      {label: "Chinese", name: "zh", widget: "text"}
-                    ]},
-                    {label: "Tech Stack Tags", name: "tags", widget: "list", default: ["React"]},
-                    {label: "Color Palette", name: "palette", widget: "list", required: false},
-                    {label: "Cover Image", name: "image", widget: "image"},
-                    {label: "Links", name: "links", widget: "object", fields: [
-                      {label: "GitHub URL", name: "github", widget: "string", required: false},
-                      {label: "Demo URL", name: "demo", widget: "string", required: false}
-                    ]}
-                  ]
-                },
-                {
-                  label: "Laboratory Log (Posts)",
-                  name: "posts",
-                  widget: "list",
-                  fields: [
-                    {label: "ID", name: "id", widget: "string"},
-                    {label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD", value_format: "YYYY-MM-DD"},
-                    {label: "Type", name: "type", widget: "select", options: ["insight", "brief"]},
-                    {label: "Read Time", name: "readTime", widget: "string", default: "5 min"},
-                    {label: "Title", name: "title", widget: "object", fields: [
-                      {label: "English", name: "en", widget: "string"},
-                      {label: "Chinese", name: "zh", widget: "string"}
-                    ]},
-                    {label: "Excerpt", name: "excerpt", widget: "object", fields: [
-                      {label: "English", name: "en", widget: "text"},
-                      {label: "Chinese", name: "zh", widget: "text"}
-                    ]},
-                    {label: "AI Analysis (Optional)", name: "aiAnalysis", widget: "object", required: false, fields: [
-                      {label: "English", name: "en", widget: "text"},
-                      {label: "Chinese", name: "zh", widget: "text"}
-                    ]},
-                    {label: "Content (Markdown)", name: "content", widget: "markdown"}
-                  ]
-                },
-                {
-                  label: "Workspace Tools",
-                  name: "tools",
-                  widget: "list",
-                  fields: [
-                    {label: "Name", name: "name", widget: "string"},
-                    {label: "Category", name: "category", widget: "string"},
-                    {label: "Description", name: "description", widget: "string"}
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    };
+    const status = document.getElementById('login-status');
+    const log = (msg) => { console.log("[Lumina CMS]", msg); status.innerText = msg; status.style.display = 'block'; };
 
-    // Initialize CMS with the config object directly
-    CMS.init({ config });
-    
-    console.log("[Lumina] CMS Initialized manually. Config loaded.");
+    log("Starting manual boot sequence...");
+
+    // 3. Manually fetch config.yml as TEXT.
+    // This bypasses the Nginx "application/octet-stream" error because we ignore the header.
+    fetch('config.yml?v=' + Date.now()) // Add timestamp to bust cache
+      .then(response => {
+        log("Config file found. Downloading...");
+        return response.text(); 
+      })
+      .then(yamlText => {
+        try {
+          log("Parsing configuration...");
+          // 4. Parse the YAML text into a JavaScript object
+          const config = jsyaml.load(yamlText);
+          
+          // 5. Initialize the CMS with the parsed config
+          CMS.init({ config });
+          log("CMS Initialized.");
+          setTimeout(() => { status.style.display = 'none'; }, 2000);
+        } catch (e) {
+          console.error(e);
+          document.body.innerHTML = '<div style="color:red; padding:20px;"><h1>Config Error</h1><p>Failed to parse config.yml. Check console for details.</p><pre>' + e.message + '</pre></div>';
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        document.body.innerHTML = '<div style="color:red; padding:20px;"><h1>Load Error</h1><p>Failed to load config.yml.</p><pre>' + error.message + '</pre></div>';
+      });
   </script>
 </body>
 </html>
