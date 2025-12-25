@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Github, Twitter, Instagram, Cloud, Sparkles } from 'lucide-react';
+import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Github, Twitter, Instagram, Cloud, Sparkles, Lock } from 'lucide-react';
 import { BentoContainer, BentoItem } from '../components/BentoGrid';
 import ProjectCard from '../components/ProjectCard';
 import SupportWidget from '../components/SupportWidget';
@@ -209,6 +209,14 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
                     <SocialButton href="https://github.com/uschan" icon={<Github size={20} />} label="GitHub" />
                     <SocialButton href="https://bsky.app/profile/wildsalt.bsky.social" icon={<Cloud size={20} />} label="Bluesky" />
                     <SocialButton href="https://wildsalt.me/" icon={<Sparkles size={20} />} label="WildSalt" />
+                    {/* CMS Entry Point */}
+                    <a 
+                      href="/admin/index.html" 
+                      className="p-3 rounded-full bg-background border border-border text-muted-foreground hover:text-indigo-500 hover:border-indigo-500 transition-all hover:scale-110 active:scale-95"
+                      title="System Admin"
+                    >
+                      <Lock size={20} />
+                    </a>
                  </div>
                  <div className="w-full">
                     <SupportWidget compact />

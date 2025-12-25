@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ContentService } from '../services/content';
-import { Language } from '../types';
+import { Language, Project } from '../types';
 import { ArrowLeft, Github, ExternalLink, Palette, Cpu, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SupportWidget from '../components/SupportWidget';
@@ -10,12 +9,12 @@ import SEO from '../components/SEO';
 
 interface ProjectDetailProps {
   lang: Language;
+  projects: Project[];
 }
 
-const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang }) => {
+const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
   const { id } = useParams<{ id: string }>();
-  // Use ContentService instead of direct import
-  const project = ContentService.getProjectById(id || '');
+  const project = projects.find(p => p.id === id);
 
   if (!project) {
     return <div className="pt-32 text-center">Project not found</div>;

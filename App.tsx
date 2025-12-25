@@ -8,9 +8,9 @@ import BackToTop from './components/BackToTop';
 import Starfield from './components/Starfield'; // Import Starfield
 import { TRANSLATIONS } from './constants';
 import { ContentService } from './services/content';
-import { Language } from './types';
+import { Language, Project, Post, ToolItem } from './types';
 import { AnimatePresence } from 'framer-motion';
-import { BarChart, Users } from 'lucide-react';
+import { BarChart, Users, Sparkles, Bot, BrainCircuit, Image, Code2, MousePointer2, TerminalSquare, Container, Atom, FileCode2, Wind, Box, PenTool, Smartphone, Database, Cloud, Cpu } from 'lucide-react';
 
 // Lazy Load Pages
 const Landing = React.lazy(() => import('./pages/Landing'));
@@ -28,6 +28,29 @@ const ScrollToTop = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
   return null;
+};
+
+// Icon Mapping Helper for JSON data (since JSON can't store functions)
+const getIconForTool = (name: string) => {
+  const map: Record<string, any> = {
+    'Gemini 3 Pro': Sparkles,
+    'ChatGPT': Bot,
+    'Claude': BrainCircuit,
+    'Midjourney': Image,
+    'VS Code': Code2,
+    'Cursor': MousePointer2,
+    'PuTTY': TerminalSquare,
+    'Docker': Container,
+    'React 19': Atom,
+    'TypeScript': FileCode2,
+    'Tailwind CSS': Wind,
+    'Next.js 15': Box,
+    'Figma': PenTool,
+    'Framer': Smartphone,
+    'Supabase': Database,
+    'Vercel': Cloud
+  };
+  return map[name] || Cpu;
 };
 
 // Loading Component
@@ -51,9 +74,42 @@ const AppContent: React.FC<{
   const location = useLocation();
   const isLanding = location.pathname === '/'; // Check if on Landing Page
 
-  const projects = ContentService.getProjects();
-  const posts = ContentService.getPosts();
-  const tools = ContentService.getTools();
+  // Data State - Initialize with ContentService (fallback), then fetch external JSON
+  const [content, setContent] = useState<{
+    projects: Project[];
+    posts: Post[];
+    tools: ToolItem[];
+  }>({
+    projects: ContentService.getProjects(),
+    posts: ContentService.getPosts(),
+    tools: ContentService.getTools()
+  });
+
+  useEffect(() => {
+    fetch('./data.json')
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load external data");
+        return res.json();
+      })
+      .then(data => {
+        // Map icons back to tools since JSON only has names
+        const toolsWithIcons = data.tools.map((t: any) => ({
+          ...t,
+          icon: getIconForTool(t.name)
+        }));
+        
+        setContent({
+          projects: data.projects,
+          posts: data.posts,
+          tools: toolsWithIcons
+        });
+      })
+      .catch(err => {
+        console.warn("Using default content fallback.", err);
+      });
+  }, []);
+
+  const { projects, posts, tools } = content;
 
   // Simulated Visitor Stats Logic
   const [stats, setStats] = useState({ total: 10234, today: 42 });
@@ -107,6 +163,8 @@ const AppContent: React.FC<{
             lang={lang} 
             toggleTheme={toggleTheme} 
             toggleLang={toggleLang}
+            projects={projects}
+            posts={posts}
           />
           <Navigation 
             lang={lang} 
@@ -139,7 +197,7 @@ const AppContent: React.FC<{
                       t={t} 
                       featuredProjects={projects.filter(p => p.featured)} 
                       recentPosts={posts.slice(0, 2)}
-                      featuredTools={tools.slice(0, 4)}
+                      featuredTools={tools.slice(0, 8)}
                     />
                   } 
                 />
@@ -149,7 +207,7 @@ const AppContent: React.FC<{
                 />
                 <Route 
                   path="/projects/:id" 
-                  element={<ProjectDetail lang={lang} />} 
+                  element={<ProjectDetail lang={lang} projects={projects} />} 
                 />
                 <Route 
                   path="/insights" 
@@ -157,7 +215,7 @@ const AppContent: React.FC<{
                 />
                 <Route 
                   path="/insights/:id" 
-                  element={<BlogPost lang={lang} />} 
+                  element={<BlogPost lang={lang} posts={posts} />} 
                 />
                 <Route 
                   path="/tools" 

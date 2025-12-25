@@ -12,22 +12,20 @@ import {
   Command,
   X
 } from 'lucide-react';
-import { ContentService } from '../services/content';
-import { Language } from '../types';
+import { Language, Project, Post } from '../types';
 
 interface CommandMenuProps {
   lang: Language;
   toggleTheme: () => void;
   toggleLang: () => void;
+  projects: Project[];
+  posts: Post[];
 }
 
-const CommandMenu: React.FC<CommandMenuProps> = ({ lang, toggleTheme, toggleLang }) => {
+const CommandMenu: React.FC<CommandMenuProps> = ({ lang, toggleTheme, toggleLang, projects, posts }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
-
-  const projects = ContentService.getProjects();
-  const posts = ContentService.getPosts();
 
   // Toggle with Keyboard Shortcut (Cmd+K or Ctrl+K)
   useEffect(() => {

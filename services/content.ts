@@ -127,7 +127,7 @@ export const PROJECTS: Project[] = [
     links: {
       demo: '#'
     },
-    featured: false,
+    featured: true,
   },
   {
     id: '4',

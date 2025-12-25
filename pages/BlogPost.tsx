@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ContentService } from '../services/content';
-import { Language } from '../types';
+import { Language, Post } from '../types';
 import { ArrowLeft, Clock, Calendar, List, Sparkles, Share2, ThumbsUp, Heart, Rocket, FileText, Check } from 'lucide-react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -11,11 +10,12 @@ import Comments from '../components/Comments';
 
 interface BlogPostProps {
   lang: Language;
+  posts: Post[];
 }
 
-const BlogPost: React.FC<BlogPostProps> = ({ lang }) => {
+const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
   const { id } = useParams<{ id: string }>();
-  const post = ContentService.getPostById(id || '');
+  const post = posts.find(p => p.id === id);
   const [copied, setCopied] = useState(false);
   const [reactions, setReactions] = useState({ like: 124, heart: 45, rocket: 89 });
   const [activeId, setActiveId] = useState<string>('');
