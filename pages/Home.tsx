@@ -205,7 +205,7 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
               </div>
               <div className="mt-6 md:mt-0 flex flex-col items-end gap-4">
                  <div className="flex gap-4">
-                    <SocialButton href="https://x.com/uschan2" icon={<Twitter size={20} />} label="X" />
+                    <SocialButton href="https://x.com/uschan" icon={<Twitter size={20} />} label="X" />
                     <SocialButton href="https://github.com/uschan" icon={<Github size={20} />} label="GitHub" />
                     <SocialButton href="https://bsky.app/profile/wildsalt.bsky.social" icon={<Cloud size={20} />} label="Bluesky" />
                     <SocialButton href="https://wildsalt.me/" icon={<Sparkles size={20} />} label="WildSalt" />
