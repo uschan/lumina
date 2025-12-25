@@ -60,6 +60,22 @@
     npm run build
     ```
 
+## ☁️ VPS 部署 (OAuth 服务)
+
+为了在您自己的 VPS 上启用 CMS 登录，您需要运行 OAuth 服务。
+
+1.  **安装 Docker & Docker Compose**:
+    ```bash
+    sudo apt update
+    sudo apt install docker.io docker-compose -y
+    ```
+
+2.  **配置与运行**:
+    确保您的 `docker-compose.yml` 填入了正确的 `CLIENT_ID` 和 `CLIENT_SECRET`。
+    ```bash
+    docker-compose up -d
+    ```
+
 ## 🔮 未来路线图：后端与 AI 融合
 
 当前版本主要作为“视图 (View)”层。为了将 Lumina 转变为功能完备的“AI 实验室”，建议采用以下全栈架构方案：
@@ -71,7 +87,7 @@
     *   *理由*: 服务端渲染 (SSR) 对博客 SEO 至关重要。React 服务端组件 (RSC) 允许直接从服务器流式传输 AI 响应，而无需暴露 API 密钥。
 *   **数据库**: **PostgreSQL** (通过 Supabase 或 Neon)。
     *   *理由*: 为文章/项目提供强大的关系型数据支持。易于集成 **pgvector** 以存储嵌入向量 (实现向量搜索功能)。
-*   **CMS**: **Sanity.io** 或 **Strapi (Headless)**。
+*   **CMS**: **Sanity.io** or **Strapi (Headless)**。
     *   *理由*: 仅通过 Markdown 文件管理内容 (当前状态) 难以扩展。Headless CMS 能提供丰富的编辑体验。
 
 ### 2. AI 引擎 (后端)

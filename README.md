@@ -60,6 +60,22 @@ It currently serves as a high-fidelity frontend prototype, simulating AI interac
     npm run build
     ```
 
+## ☁️ VPS Deployment (OAuth Server)
+
+To enable the CMS login on your own VPS, you need to run the OAuth server.
+
+1.  **Install Docker & Docker Compose**:
+    ```bash
+    sudo apt update
+    sudo apt install docker.io docker-compose -y
+    ```
+
+2.  **Configure & Run**:
+    Ensure your `docker-compose.yml` has the correct `CLIENT_ID` and `CLIENT_SECRET`.
+    ```bash
+    docker-compose up -d
+    ```
+
 ## 🔮 Future Roadmap: Backend & AI Integration
 
 The current version acts as a "View" layer. To transform Lumina into a fully functional "AI Laboratory," the following full-stack architecture is recommended.

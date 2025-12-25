@@ -1,15 +1,16 @@
 version: '3'
 services:
   oauth-server:
-    image: ublabs/netlify-cms-oauth-provider-go:latest
+    # Switched to a reliable, existing image
+    image: vtsatskin/netlify-cms-oauth-provider-go:latest
     container_name: lumina-auth
     restart: always
     environment:
       # GitHub OAuth App Info
-      - OAUTH_CLIENT_ID=Iv23li5ruvGgBnvl0J3c
-      # ⚠️ 必须在服务器上将下方的值替换为您 GitHub App 的 Client Secret
-      - OAUTH_CLIENT_SECRET=YOUR_GITHUB_CLIENT_SECRET_HERE
-      - OAUTH_PROVIDER=github
+      # Note: This image uses CLIENT_ID/SECRET without the OAUTH_ prefix
+      - CLIENT_ID=Iv23li5ruvGgBnvl0J3c
+      # ⚠️ REPLACE THIS with your actual GitHub App Client Secret
+      - CLIENT_SECRET=4718d7dd8dfabc4d745539368039d495077c591b
     ports:
-      # 映射本地 8080 端口到容器
+      # Maps local 8080 to container 8080
       - "8080:8080"
