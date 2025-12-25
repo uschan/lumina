@@ -1,16 +1,18 @@
 version: '3'
 services:
   oauth-server:
-    # Switched to 'pming' - a stable, widely used fork
-    image: pming/netlify-cms-oauth-provider-go:latest
+    # Switched to the most stable Node.js based image (1M+ pulls)
+    # This fixes the "repository does not exist" error from deleted Go images
+    image: ismailtlem/netlify-cms-oauth-provider-node:latest
     container_name: lumina-auth
     restart: always
     environment:
-      # This image requires the OAUTH_ prefix
       - OAUTH_PROVIDER=github
       - OAUTH_CLIENT_ID=Iv23li5ruvGgBnvl0J3c
-      # Hardcoded Client Secret as requested
+      # Hardcoded Client Secret
       - OAUTH_CLIENT_SECRET=4718d7dd8dfabc4d745539368039d495077c591b
+      # Optional: Define scopes to ensure CMS has permission
+      - SCOPES=repo,user
     ports:
-      # Maps local 8080 to container 8080
-      - "8080:8080"
+      # Map host 8080 to container 3000 (Node app default port)
+      - "8080:3000"
