@@ -134,8 +134,8 @@ const Landing: React.FC<LandingProps> = ({ lang }) => {
           {/* Glitchy Title */}
           <div className="relative">
              <h1 className="text-6xl md:text-9xl font-bold tracking-tighter mix-blend-screen relative inline-block">
-               野盐 WILDSALT
-               <span className="absolute -inset-1 animate-pulse opacity-20 text-indigo-500 blur-lg select-none">野盐 WILDSALT</span>
+               LUMINA
+               <span className="absolute -inset-1 animate-pulse opacity-20 text-indigo-500 blur-lg select-none">LUMINA</span>
              </h1>
              <div className="text-xs md:text-sm font-mono text-indigo-400 mt-2 tracking-[0.5em] uppercase opacity-80">
                {lang === 'en' ? 'Digital Laboratory' : '数字实验室'}
