@@ -12,7 +12,7 @@ import {
   Command,
   X
 } from 'lucide-react';
-import { useContent } from '../contexts/ContentContext';
+import { ContentService } from '../services/content';
 import { Language } from '../types';
 
 interface CommandMenuProps {
@@ -26,7 +26,8 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ lang, toggleTheme, toggleLang
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
 
-  const { projects, posts } = useContent();
+  const projects = ContentService.getProjects();
+  const posts = ContentService.getPosts();
 
   // Toggle with Keyboard Shortcut (Cmd+K or Ctrl+K)
   useEffect(() => {

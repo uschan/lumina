@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useContent } from '../contexts/ContentContext';
+import { ContentService } from '../services/content';
 import { Language } from '../types';
 import { ArrowLeft, Clock, Calendar, List, Sparkles, Share2, ThumbsUp, Heart, Rocket, FileText, Check } from 'lucide-react';
 import { motion, useScroll, useSpring } from 'framer-motion';
@@ -15,8 +15,7 @@ interface BlogPostProps {
 
 const BlogPost: React.FC<BlogPostProps> = ({ lang }) => {
   const { slug } = useParams<{ slug: string }>(); // Use slug instead of id
-  const { getPostBySlug } = useContent();
-  const post = getPostBySlug(slug || '');
+  const post = ContentService.getPostBySlug(slug || '');
   const [copied, setCopied] = useState(false);
   const [reactions, setReactions] = useState({ like: 124, heart: 45, rocket: 89 });
   const [activeId, setActiveId] = useState<string>('');

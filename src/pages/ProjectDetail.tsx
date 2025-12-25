@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useContent } from '../contexts/ContentContext';
+import { ContentService } from '../services/content';
 import { Language } from '../types';
 import { ArrowLeft, Github, ExternalLink, Palette, Cpu, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -13,9 +13,9 @@ interface ProjectDetailProps {
 }
 
 const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang }) => {
-  const { slug } = useParams<{ slug: string }>(); // Use slug instead of id
-  const { getProjectBySlug } = useContent();
-  const project = getProjectBySlug(slug || '');
+  const { slug } = useParams<{ slug: string }>(); 
+  // Use ContentService with slug
+  const project = ContentService.getProjectBySlug(slug || '');
 
   if (!project) {
     return <div className="pt-32 text-center">Project not found</div>;

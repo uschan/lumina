@@ -5,12 +5,12 @@ import Navigation from './components/Navigation';
 import ErrorBoundary from './components/ErrorBoundary';
 import CommandMenu from './components/CommandMenu';
 import BackToTop from './components/BackToTop';
-import Starfield from './components/Starfield';
+import Starfield from './components/Starfield'; // Import Starfield
 import { TRANSLATIONS } from './constants';
+import { ContentService } from './services/content';
 import { Language } from './types';
 import { AnimatePresence } from 'framer-motion';
 import { BarChart, Users } from 'lucide-react';
-import { ContentProvider, useContent } from './contexts/ContentContext';
 
 // Lazy Load Pages
 const Landing = React.lazy(() => import('./pages/Landing'));
@@ -40,7 +40,7 @@ const PageLoader = () => (
   </div>
 );
 
-// Inner Content Component to access Router Context and Content Context
+// Inner Content Component to access Router Context
 const AppContent: React.FC<{ 
   lang: Language; 
   theme: 'light' | 'dark'; 
@@ -49,15 +49,17 @@ const AppContent: React.FC<{
   t: any 
 }> = ({ lang, theme, toggleTheme, toggleLang, t }) => {
   const location = useLocation();
-  const isLanding = location.pathname === '/';
-  
-  // Use data from Context
-  const { projects, posts, tools, loading } = useContent();
+  const isLanding = location.pathname === '/'; // Check if on Landing Page
+
+  const projects = ContentService.getProjects();
+  const posts = ContentService.getPosts();
+  const tools = ContentService.getTools();
 
   // Simulated Visitor Stats Logic
   const [stats, setStats] = useState({ total: 10234, today: 42 });
 
   useEffect(() => {
+    // Basic simulation of persistent stats using localStorage
     const storedTotal = localStorage.getItem('lumina_total_visits');
     const storedToday = localStorage.getItem('lumina_today_visits');
     const lastVisitDate = localStorage.getItem('lumina_last_visit_date');
@@ -67,8 +69,9 @@ const AppContent: React.FC<{
     let newToday = storedToday ? parseInt(storedToday) : 42;
 
     if (lastVisitDate !== todayStr) {
-      newToday = 12;
+      newToday = 12; // Reset for new day (simulated start count)
     } else {
+      // Simulate increment on refresh/new session logic (debounce could be added)
       if (!sessionStorage.getItem('visited_session')) {
          newToday += 1;
          newTotal += 1;
@@ -82,10 +85,6 @@ const AppContent: React.FC<{
 
     setStats({ total: newTotal, today: newToday });
   }, []);
-
-  if (loading) {
-    return <PageLoader />;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-500 flex flex-col">
@@ -121,14 +120,17 @@ const AppContent: React.FC<{
 
       <main className={`relative z-10 flex-grow ${isLanding ? 'h-screen' : ''}`}>
         <ErrorBoundary>
+          {/* Suspense must wrap AnimatePresence for lazy routes to work without error #525 */}
           <Suspense fallback={<PageLoader />}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
+                {/* Landing Page Route */}
                 <Route 
                   path="/" 
                   element={<Landing lang={lang} />} 
                 />
                 
+                {/* Main Laboratory Dashboard (Previously Home) */}
                 <Route 
                   path="/lab" 
                   element={
@@ -145,7 +147,6 @@ const AppContent: React.FC<{
                   path="/projects" 
                   element={<Projects lang={lang} />} 
                 />
-                {/* Changed :id to :slug */}
                 <Route 
                   path="/projects/:slug" 
                   element={<ProjectDetail lang={lang} />} 
@@ -154,7 +155,6 @@ const AppContent: React.FC<{
                   path="/insights" 
                   element={<Insights lang={lang} />} 
                 />
-                {/* Changed :id to :slug */}
                 <Route 
                   path="/insights/:slug" 
                   element={<BlogPost lang={lang} />} 
@@ -235,19 +235,16 @@ const App: React.FC = () => {
 
   return (
     <HelmetProvider>
-      <ContentProvider>
-        {/* Switched to BrowserRouter for proper SEO URLs */}
-        <BrowserRouter>
-          <ScrollToTop />
-          <AppContent 
-            lang={lang}
-            theme={theme}
-            toggleTheme={toggleTheme}
-            toggleLang={toggleLang}
-            t={t}
-          />
-        </BrowserRouter>
-      </ContentProvider>
+      <BrowserRouter>
+        <ScrollToTop />
+        <AppContent 
+          lang={lang}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          toggleLang={toggleLang}
+          t={t}
+        />
+      </BrowserRouter>
     </HelmetProvider>
   );
 };
