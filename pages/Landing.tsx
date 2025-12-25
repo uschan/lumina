@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Terminal, Wifi, Battery, Cpu, Globe } from 'lucide-react';
+import { ArrowRight, Terminal, Wifi, Battery, Cpu, Globe, Twitter, Github, Instagram, Cloud, CreditCard, Gamepad2, Sparkles, Languages } from 'lucide-react';
 import { Language } from '../types';
 
 interface LandingProps {
   lang: Language;
+  toggleLang: () => void;
 }
 
-const Landing: React.FC<LandingProps> = ({ lang }) => {
+const Landing: React.FC<LandingProps> = ({ lang, toggleLang }) => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
@@ -172,9 +173,10 @@ const Landing: React.FC<LandingProps> = ({ lang }) => {
       </div>
 
       {/* Footer / Terminal Status */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 p-6 flex justify-between items-end pointer-events-none">
-        {/* Terminal Output */}
-        <div className="hidden md:block font-mono text-[10px] text-green-500/80 leading-tight bg-black/50 p-4 rounded-lg border border-white/5 backdrop-blur-sm max-w-sm">
+      <div className="absolute bottom-0 left-0 right-0 z-30 p-6 flex flex-col md:flex-row justify-between items-end pointer-events-none gap-4">
+        
+        {/* Terminal Output - Hidden on small screens to save space */}
+        <div className="hidden lg:block font-mono text-[10px] text-green-500/80 leading-tight bg-black/50 p-4 rounded-lg border border-white/5 backdrop-blur-sm max-w-sm">
            <div className="flex items-center gap-2 mb-2 text-gray-500 border-b border-white/10 pb-1">
              <Terminal size={10} />
              <span>TERMINAL_OUTPUT</span>
@@ -188,31 +190,66 @@ const Landing: React.FC<LandingProps> = ({ lang }) => {
            <div className="animate-pulse">_</div>
         </div>
 
-        {/* Status Indicators */}
-        <div className="flex items-center gap-4 text-[10px] text-gray-500 font-mono bg-black/50 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
-           <div className="flex items-center gap-2">
-              <Globe size={12} />
-              <span>EARTH_616</span>
-           </div>
-           <div className="w-px h-3 bg-gray-700" />
-           <div className="flex items-center gap-2">
-              <Wifi size={12} className="text-indigo-500" />
-              <span>CONNECTED</span>
-           </div>
-           <div className="w-px h-3 bg-gray-700" />
-           <div className="flex items-center gap-2">
-              <Battery size={12} className="text-emerald-500" />
-              <span>100%</span>
-           </div>
-           <div className="w-px h-3 bg-gray-700" />
-           <div className="flex items-center gap-2">
-              <Cpu size={12} />
-              <span>v.2.0.4</span>
-           </div>
+        <div className="w-full flex flex-col items-center md:items-end gap-3 pointer-events-auto">
+            
+            {/* Social Media Dock */}
+            <div className="flex items-center gap-2 text-gray-400 bg-black/50 px-3 py-2 rounded-full border border-white/5 backdrop-blur-sm shadow-xl">
+               <SocialIcon href="https://x.com/uschan2" icon={<Twitter size={14} />} label="X (Twitter)" />
+               <SocialIcon href="https://github.com/uschan" icon={<Github size={14} />} label="GitHub" />
+               <SocialIcon href="https://www.instagram.com/bujjun" icon={<Instagram size={14} />} label="Instagram" />
+               <SocialIcon href="https://bsky.app/profile/wildsalt.bsky.social" icon={<Cloud size={14} />} label="Bluesky" />
+               <SocialIcon href="https://discord.gg/26nJEhq6Yj" icon={<Gamepad2 size={14} />} label="Discord" />
+               <SocialIcon href="https://paypal.me/wildsaltme?utm_source=wildsalt.me" icon={<CreditCard size={14} />} label="PayPal" />
+               <div className="w-px h-3 bg-white/10 mx-1" />
+               <SocialIcon href="https://wildsalt.me/" icon={<Sparkles size={14} />} label="WildSalt" activeColor="text-amber-400" />
+            </div>
+
+            {/* Status Indicators & Language Toggle */}
+            <div className="flex items-center gap-4 text-[10px] text-gray-500 font-mono bg-black/50 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                  <Globe size={12} />
+                  <span>EARTH_616</span>
+              </div>
+              <div className="w-px h-3 bg-gray-700" />
+              <div className="flex items-center gap-2">
+                  <Wifi size={12} className="text-indigo-500" />
+                  <span>CONNECTED</span>
+              </div>
+              <div className="w-px h-3 bg-gray-700" />
+              <div className="hidden sm:flex items-center gap-2">
+                  <Cpu size={12} />
+                  <span>v.2.0.4</span>
+              </div>
+              <div className="w-px h-3 bg-gray-700 hidden sm:block" />
+              
+              {/* Language Toggle */}
+              <button 
+                onClick={toggleLang}
+                className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer group"
+                title="Switch Language"
+              >
+                 <Languages size={12} className="group-hover:text-indigo-400 transition-colors" />
+                 <span className={lang === 'en' ? 'text-white font-bold' : ''}>EN</span>
+                 <span>/</span>
+                 <span className={lang === 'zh' ? 'text-white font-bold' : ''}>中</span>
+              </button>
+            </div>
         </div>
       </div>
     </div>
   );
 };
+
+const SocialIcon = ({ href, icon, label, activeColor = "text-indigo-400" }: { href: string, icon: React.ReactNode, label: string, activeColor?: string }) => (
+  <a 
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`p-2 rounded-full hover:bg-white/10 hover:${activeColor} transition-all duration-300 hover:scale-110`}
+    title={label}
+  >
+    {icon}
+  </a>
+);
 
 export default Landing;

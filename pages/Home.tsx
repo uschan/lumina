@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Github, Twitter, Linkedin } from 'lucide-react';
+import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Github, Twitter, Instagram, Cloud, Sparkles } from 'lucide-react';
 import { BentoContainer, BentoItem } from '../components/BentoGrid';
 import ProjectCard from '../components/ProjectCard';
 import SupportWidget from '../components/SupportWidget';
@@ -205,9 +205,10 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
               </div>
               <div className="mt-6 md:mt-0 flex flex-col items-end gap-4">
                  <div className="flex gap-4">
-                    <SocialButton icon={<Github size={20} />} />
-                    <SocialButton icon={<Twitter size={20} />} />
-                    <SocialButton icon={<Linkedin size={20} />} />
+                    <SocialButton href="https://x.com/uschan2" icon={<Twitter size={20} />} label="X" />
+                    <SocialButton href="https://github.com/uschan" icon={<Github size={20} />} label="GitHub" />
+                    <SocialButton href="https://bsky.app/profile/wildsalt.bsky.social" icon={<Cloud size={20} />} label="Bluesky" />
+                    <SocialButton href="https://wildsalt.me/" icon={<Sparkles size={20} />} label="WildSalt" />
                  </div>
                  <div className="w-full">
                     <SupportWidget compact />
@@ -226,8 +227,14 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
   );
 };
 
-const SocialButton = ({ icon }: { icon: React.ReactNode }) => (
-  <a href="#" className="p-3 rounded-full bg-background border border-border text-muted-foreground hover:text-foreground hover:border-indigo-500 transition-all hover:scale-110 active:scale-95">
+const SocialButton = ({ icon, href, label }: { icon: React.ReactNode, href: string, label: string }) => (
+  <a 
+    href={href} 
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label={label}
+    className="p-3 rounded-full bg-background border border-border text-muted-foreground hover:text-foreground hover:border-indigo-500 transition-all hover:scale-110 active:scale-95"
+  >
     {icon}
   </a>
 );

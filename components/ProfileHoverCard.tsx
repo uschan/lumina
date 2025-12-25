@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Github, Twitter, Mail, MapPin, ExternalLink } from 'lucide-react';
+import { Github, Twitter, Mail, ExternalLink, Cloud } from 'lucide-react';
 
 interface ProfileHoverCardProps {
   children: React.ReactNode;
@@ -52,24 +52,24 @@ const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({ children }) => {
                 {/* Content Info */}
                 <div>
                    <h4 className="text-lg font-bold text-foreground">Lumina</h4>
-                   <p className="text-sm text-muted-foreground font-mono mb-3">@lumina_lab</p>
+                   <p className="text-sm text-muted-foreground font-mono mb-3">@uschan2</p>
                    
                    <p className="text-sm text-foreground/80 leading-relaxed mb-4">
                      Full-stack creative developer crafting digital experiences at the intersection of design & AI.
                    </p>
 
                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-                      <MapPin size={14} className="text-indigo-500" />
-                      <span>Digital Nomad / Earth</span>
+                      <ExternalLink size={14} className="text-indigo-500" />
+                      <a href="https://wildsalt.me/" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-indigo-500">wildsalt.me</a>
                    </div>
                 </div>
 
                 {/* Footer / Socials */}
                 <div className="flex gap-2 pt-4 border-t border-border/50">
-                   <SocialLink icon={<Github size={16} />} href="#" label="GitHub" />
-                   <SocialLink icon={<Twitter size={16} />} href="#" label="Twitter" />
-                   <SocialLink icon={<Mail size={16} />} href="#" label="Email" />
-                   <SocialLink icon={<ExternalLink size={16} />} href="#" label="Website" />
+                   <SocialLink icon={<Github size={16} />} href="https://github.com/uschan" label="GitHub" />
+                   <SocialLink icon={<Twitter size={16} />} href="https://x.com/uschan2" label="X (Twitter)" />
+                   <SocialLink icon={<Cloud size={16} />} href="https://bsky.app/profile/wildsalt.bsky.social" label="Bluesky" />
+                   <SocialLink icon={<ExternalLink size={16} />} href="https://wildsalt.me/" label="Website" />
                 </div>
               </div>
             </div>
@@ -84,6 +84,8 @@ const SocialLink = ({ icon, href, label }: { icon: React.ReactNode; href: string
   <a 
     href={href} 
     title={label}
+    target="_blank"
+    rel="noopener noreferrer"
     className="p-2 rounded-lg bg-secondary/50 hover:bg-indigo-500/10 hover:text-indigo-500 transition-colors text-muted-foreground"
   >
     {icon}

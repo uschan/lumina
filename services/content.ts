@@ -1,5 +1,9 @@
 import { Project, Post, ToolItem } from '../types';
-import { Atom, FileCode2, Wind, Layers, Sparkles, Box, Zap, PenTool } from 'lucide-react';
+import { 
+  Atom, FileCode2, Wind, Layers, Sparkles, Box, Zap, PenTool, 
+  TerminalSquare, Code2, MousePointer2, Bot, BrainCircuit, Image, 
+  Container, Database, Smartphone, Cloud
+} from 'lucide-react';
 
 // MOCKING MDX CONTENT
 const MARKDOWN_CONTENT_1 = `
@@ -190,14 +194,29 @@ export const POSTS: Post[] = [
 ];
 
 export const TOOLS: ToolItem[] = [
+  // AI & Models
+  { name: 'Gemini 3 Pro', category: 'AI Model', description: 'Advanced Reasoning', icon: Sparkles },
+  { name: 'ChatGPT', category: 'AI Assistant', description: 'GPT-4o', icon: Bot },
+  { name: 'Claude', category: 'AI Assistant', description: '3.5 Sonnet', icon: BrainCircuit },
+  { name: 'Midjourney', category: 'AI Art', description: 'Image Gen', icon: Image },
+
+  // Development Environment (IDEs)
+  { name: 'VS Code', category: 'IDE', description: 'Code Editor', icon: Code2 },
+  { name: 'Cursor', category: 'IDE', description: 'AI Code Editor', icon: MousePointer2 },
+  { name: 'PuTTY', category: 'Terminal', description: 'SSH Client', icon: TerminalSquare },
+  { name: 'Docker', category: 'DevOps', description: 'Containerization', icon: Container },
+
+  // Core Tech
   { name: 'React 19', category: 'Frontend', description: 'Library', icon: Atom },
   { name: 'TypeScript', category: 'Language', description: 'Type safety', icon: FileCode2 },
   { name: 'Tailwind CSS', category: 'Styling', description: 'Utility-first', icon: Wind },
-  { name: 'Framer Motion', category: 'Animation', description: 'Physics based', icon: Layers },
-  { name: 'Gemini 3 Pro', category: 'AI', description: 'Reasoning Model', icon: Sparkles },
   { name: 'Next.js 15', category: 'Framework', description: 'App Router', icon: Box },
-  { name: 'Vite', category: 'Build', description: 'Lightning fast', icon: Zap },
+  
+  // Design & Others
   { name: 'Figma', category: 'Design', description: 'Prototyping', icon: PenTool },
+  { name: 'Framer', category: 'Design', description: 'Interactive', icon: Smartphone },
+  { name: 'Supabase', category: 'Backend', description: 'Database', icon: Database },
+  { name: 'Vercel', category: 'Deployment', description: 'Hosting', icon: Cloud },
 ];
 
 export const ContentService = {

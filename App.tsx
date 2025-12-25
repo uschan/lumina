@@ -127,7 +127,7 @@ const AppContent: React.FC<{
                 {/* Landing Page Route */}
                 <Route 
                   path="/" 
-                  element={<Landing lang={lang} />} 
+                  element={<Landing lang={lang} toggleLang={toggleLang} />} 
                 />
                 
                 {/* Main Laboratory Dashboard (Previously Home) */}
