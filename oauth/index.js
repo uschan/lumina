@@ -44,18 +44,19 @@ const handleCallback = async (req, res) => {
       provider: provider
     };
 
-    // Robust page with manual trigger
+    // Robust page with enhanced handoff logic
     const script = `
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
-        <title>Auth Success</title>
+        <meta charset="UTF-8">
+        <title>Lumina Security Link</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
            body {
              background-color: #09090b;
              color: #e4e4e7;
-             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
              display: flex;
              flex-direction: column;
              align-items: center;
@@ -63,65 +64,119 @@ const handleCallback = async (req, res) => {
              height: 100vh;
              margin: 0;
              text-align: center;
+             padding: 20px;
            }
-           h2 { color: #4ade80; margin-bottom: 10px; }
-           p { color: #a1a1aa; margin-bottom: 30px; }
+           .card {
+             background: #18181b;
+             border: 1px solid #27272a;
+             padding: 2rem;
+             border-radius: 1rem;
+             max-width: 400px;
+             width: 100%;
+             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+           }
+           h2 { color: #818cf8; margin-top: 0; font-size: 1.25rem; }
+           p { color: #a1a1aa; font-size: 0.875rem; line-height: 1.5; margin-bottom: 1.5rem; }
+           .status-line { margin-top: 1rem; font-size: 0.75rem; color: #71717a; }
+           
            button {
-             background: #6366f1;
+             background: #4f46e5;
              color: white;
              border: none;
-             padding: 16px 32px;
-             border-radius: 12px;
-             font-size: 16px;
+             padding: 0.75rem 1.5rem;
+             border-radius: 0.5rem;
+             font-size: 0.875rem;
              font-weight: 600;
              cursor: pointer;
-             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+             width: 100%;
              transition: all 0.2s;
            }
-           button:hover { background: #4f46e5; transform: translateY(-1px); }
-           button:active { transform: translateY(0); }
-           .debug { font-family: monospace; font-size: 10px; color: #555; margin-top: 20px; }
+           button:hover { background: #4338ca; }
+           
+           .error-box {
+             margin-top: 1rem;
+             padding: 0.75rem;
+             background: rgba(239, 68, 68, 0.1);
+             border: 1px solid rgba(239, 68, 68, 0.2);
+             color: #ef4444;
+             border-radius: 0.5rem;
+             font-size: 0.75rem;
+             display: none;
+             text-align: left;
+           }
         </style>
       </head>
       <body>
-      <h2>✅ Authentication Successful</h2>
-      <p>Click the button below to complete the login process.</p>
-      
-      <button id="btn" onclick="sendMsg()">Complete Login</button>
-      
-      <div class="debug">Token: ${access_token.substring(0,5)}...</div>
-      
-      <script>
-        function sendMsg() {
+        <div class="card">
+          <h2>🔐 Verifying Credentials</h2>
+          <p id="msg">Establishing secure uplink to Lumina CMS...</p>
+          
+          <button id="btn" onclick="retryHandshake()">Retry Handshake</button>
+          
+          <div id="error-log" class="error-box"></div>
+          <div class="status-line">Token acquired. Waiting for parent window.</div>
+        </div>
+
+        <script>
           const content = ${JSON.stringify(content)};
           const provider = "${provider}";
           // Standard Decap CMS message format
           const message = "authorization:" + provider + ":success:" + JSON.stringify(content);
-          
-          const btn = document.getElementById('btn');
-          
-          if (window.opener) {
-             console.log("Sending message...", message);
-             // 1. Try generic wildcard (most likely to work)
-             window.opener.postMessage(message, "*");
-             // 2. Try specific origin
-             window.opener.postMessage(message, "https://gemini.wildsalt.me");
-             
-             btn.innerText = "Login Signal Sent!";
-             btn.style.background = "#22c55e";
-             
-             // Close after a short delay
-             setTimeout(() => window.close(), 800);
-          } else {
-             btn.innerText = "Error: Parent window not found";
-             btn.style.background = "#ef4444";
-             alert("Could not find the CMS window. Please close this popup and try clicking 'Login' again.");
-          }
-        }
+          const targetOrigin = window.location.origin; // Matches https://gemini.wildsalt.me
 
-        // Try to send automatically once immediately
-        setTimeout(sendMsg, 500);
-      </script>
+          function logError(txt) {
+            const el = document.getElementById('error-log');
+            el.style.display = 'block';
+            el.innerText += "> " + txt + "\\n";
+          }
+
+          function status(txt) {
+            document.getElementById('msg').innerText = txt;
+          }
+
+          function handshake() {
+            try {
+              if (!window.opener) {
+                logError("CRITICAL: 'window.opener' is null.");
+                logError("Did you close the main tab?");
+                logError("Try closing this popup and clicking Login again.");
+                status("Connection Lost");
+                return;
+              }
+
+              status("Transmitting credentials...");
+
+              // 1. Send to Exact Origin (Most Secure/Reliable for same-domain)
+              window.opener.postMessage(message, targetOrigin);
+              
+              // 2. Send to Wildcard (Fallback)
+              window.opener.postMessage(message, "*");
+
+              status("Success! Redirecting...");
+              
+              // Visual feedback
+              const btn = document.getElementById('btn');
+              btn.innerText = "Login Successful";
+              btn.style.backgroundColor = "#10b981";
+              
+              // Close after a clear delay so user sees success
+              setTimeout(() => {
+                window.close();
+              }, 1500);
+
+            } catch (e) {
+              logError("Exception: " + e.message);
+            }
+          }
+
+          // Start automatically, but with a slight delay to ensure browser is ready
+          setTimeout(handshake, 800);
+
+          function retryHandshake() {
+            logError("Retrying manual handshake...");
+            handshake();
+          }
+        </script>
       </body>
       </html>
     `;
@@ -134,6 +189,7 @@ const handleCallback = async (req, res) => {
 };
 
 // --- ROUTE DEFINITIONS ---
+// Handle both root relative and full path routing
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
 app.get('/oauth/auth', handleAuth);
