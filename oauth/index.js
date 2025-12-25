@@ -47,62 +47,67 @@ const handleCallback = async (req, res) => {
       provider: provider
     };
 
-    // Robust script:
-    // 1. Visual feedback
-    // 2. Send message to * (wildcard) to avoid origin mismatches
-    // 3. Send repeatedly to ensure reception
     const script = `
       <!DOCTYPE html>
       <html>
       <head>
         <title>Authenticating...</title>
         <style>
-           body{background:#111;color:#eee;font-family:monospace;text-align:center;padding-top:50px;}
-           .success { color: #4ade80; font-size: 1.2em; margin-bottom: 20px; }
-           .info { font-size: 0.9em; color: #888; }
+           body{background:#09090b;color:#eee;font-family:sans-serif;text-align:center;padding-top:40px;display:flex;flex-direction:column;align-items:center;}
+           .success { color: #4ade80; font-size: 1.2em; margin-bottom: 10px; }
+           .info { font-size: 0.9em; color: #888; margin-bottom: 30px; }
+           button {
+             background: #4f46e5;
+             color: white;
+             border: none;
+             padding: 12px 24px;
+             border-radius: 8px;
+             font-size: 16px;
+             cursor: pointer;
+             transition: background 0.2s;
+           }
+           button:hover { background: #4338ca; }
         </style>
       </head>
       <body>
       <div class="success">Authentication successful!</div>
-      <div class="info">Handing over credentials to Lumina...</div>
-      <div class="info" id="status">Sending signal...</div>
+      <div class="info" id="status">Sending credentials to Lumina...</div>
+      
+      <button onclick="manualSend()" id="btn">Click here to finish login</button>
       
       <script>
         (function() {
           const content = ${JSON.stringify(content)};
           const provider = "${provider}";
-          // Decap CMS specific message format
           const message = "authorization:" + provider + ":success:" + JSON.stringify(content);
           
-          function sendMessage() {
+          window.manualSend = function() {
+             const btn = document.getElementById('btn');
+             btn.innerText = "Sending...";
+             
              if (window.opener) {
-                // Send to wildcard '*' to bypass any strict origin checks
+                console.log("Sending message to opener...");
+                // Send to wildcard to bypass strict origin checks
                 window.opener.postMessage(message, "*");
-                // Also try specific origin just in case
+                // Also try exact origin
                 window.opener.postMessage(message, "https://gemini.wildsalt.me");
                 
-                document.getElementById('status').innerText = "Signal sent. Closing...";
+                document.getElementById('status').innerText = "Signal sent. You can close this window.";
+                btn.innerText = "Done! Close Window";
+                
+                setTimeout(() => window.close(), 500);
              } else {
-                document.getElementById('status').innerText = "Error: Parent window lost.";
+                alert("Error: Cannot find the main website window. Please close this and try again.");
              }
           }
 
-          // Send immediately
-          sendMessage();
-
-          // Send repeatedly every 500ms for 3 seconds to guarantee delivery
-          // This handles cases where the parent window is busy or not ready
-          let count = 0;
-          const interval = setInterval(() => {
-             sendMessage();
-             count++;
-             if (count > 6) clearInterval(interval);
-          }, 500);
+          // Attempt automatic send
+          manualSend();
           
-          // Close after 2 seconds
-          setTimeout(function() {
-            window.close();
-          }, 2000);
+          // Retry logic
+          setInterval(() => {
+             if(window.opener) window.opener.postMessage(message, "*");
+          }, 1000);
         })();
       </script>
       </body>
@@ -117,7 +122,6 @@ const handleCallback = async (req, res) => {
 };
 
 // --- ROUTE DEFINITIONS ---
-// Handle both root paths and /oauth prefixed paths to account for different Nginx proxy configs
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
 app.get('/oauth/auth', handleAuth);
