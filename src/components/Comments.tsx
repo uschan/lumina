@@ -25,10 +25,11 @@ const Comments: React.FC<CommentsProps> = () => {
           category={GISCUS_CONFIG.category}
           categoryId={GISCUS_CONFIG.categoryId}
           mapping="pathname"
+          strict="0"
           term="Welcome to Lumina!"
           reactionsEnabled="1"
           emitMetadata="0"
-          inputPosition="top"
+          inputPosition="bottom"
           theme={isDark ? 'transparent_dark' : 'light'}
           lang="zh-CN"
           loading="lazy"

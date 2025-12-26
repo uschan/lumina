@@ -45,7 +45,7 @@ export const TRANSLATIONS: Record<string, Translation> = {
 };
 
 // Giscus Configuration
-// Updated with user provided values
+// Sourced from user provided script
 export const GISCUS_CONFIG = {
   repo: "uschan/lumina",
   repoId: "R_kgDOQsz9Zw",
