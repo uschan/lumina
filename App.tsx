@@ -10,6 +10,7 @@ import { TRANSLATIONS } from './constants';
 import { ContentService } from './services/content';
 import { Language, Project, Post, ToolItem } from './types';
 import { AnimatePresence } from 'framer-motion';
+// Import ALL icons used in ContentService mapping here
 import { BarChart, Users, Sparkles, Bot, BrainCircuit, Image, Code2, MousePointer2, TerminalSquare, Container, Atom, FileCode2, Wind, Box, PenTool, Smartphone, Database, Cloud, Cpu } from 'lucide-react';
 
 // Lazy Load Pages
@@ -29,11 +30,12 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Helper: Safe access to array data
-const safeArray = <T,>(arr: any): T[] => {
+// Helper: Safe access to array data (Standard function to avoid TSX generic ambiguity)
+function safeArray<T>(arr: any): T[] {
   return Array.isArray(arr) ? arr : [];
-};
+}
 
+// Icon Mapping Helper
 const getIconForTool = (name: string) => {
   const map: Record<string, any> = {
     'Gemini 3 Pro': Sparkles,
@@ -75,15 +77,22 @@ const AppContent: React.FC<{
   const location = useLocation();
   const isLanding = location.pathname === '/';
 
-  // Initial State: Use fallback content service
+  // Initial State: Use fallback content service BUT map icons immediately
   const [content, setContent] = useState<{
     projects: Project[];
     posts: Post[];
     tools: ToolItem[];
-  }>({
-    projects: ContentService.getProjects(),
-    posts: ContentService.getPosts(),
-    tools: ContentService.getTools()
+  }>(() => {
+    // We strictly use a callback for useState to ensure this heavy logic runs only once
+    return {
+      projects: ContentService.getProjects(),
+      posts: ContentService.getPosts(),
+      // CRITICAL: Map icons for default content here, as ContentService is now pure data
+      tools: ContentService.getTools().map(t => ({
+        ...t,
+        icon: getIconForTool(t.name)
+      }))
+    };
   });
 
   useEffect(() => {
@@ -108,12 +117,12 @@ const AppContent: React.FC<{
 
         const validProjects = fetchedProjects.length > 0 ? fetchedProjects : ContentService.getProjects();
         const validPosts = fetchedPosts.length > 0 ? fetchedPosts : ContentService.getPosts();
-        const validTools = fetchedTools.length > 0 ? fetchedTools : ContentService.getTools(); // Note: raw tool data needs icon mapping
-
-        // We map icons for tools regardless of source (JSON tools lack icon functions)
-        // If falling back to ContentService.getTools(), they already have icons, but re-mapping is safe 
-        // because we map based on 'name'.
-        const toolsWithIcons = (fetchedTools.length > 0 ? fetchedTools : ContentService.getTools()).map((tool: any) => ({
+        
+        // Determine tool source: fetched or fallback
+        const sourceTools = fetchedTools.length > 0 ? fetchedTools : ContentService.getTools();
+        
+        // ALWAYS Re-map icons for tools (whether from JSON or fallback)
+        const toolsWithIcons = sourceTools.map((tool: any) => ({
           ...tool,
           icon: getIconForTool(tool.name)
         }));
@@ -126,7 +135,7 @@ const AppContent: React.FC<{
       })
       .catch(err => {
         console.warn("Using default/fallback content due to fetch error:", err);
-        // We keep the initial ContentService data if fetch fails
+        // We keep the initial ContentService data if fetch fails, which is already correctly mapped in useState
       });
   }, []);
 

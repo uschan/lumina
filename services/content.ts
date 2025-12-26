@@ -1,9 +1,4 @@
 import { Project, Post, ToolItem } from '../types';
-import { 
-  Atom, FileCode2, Wind, Layers, Sparkles, Box, Zap, PenTool, 
-  TerminalSquare, Code2, MousePointer2, Bot, BrainCircuit, Image, 
-  Container, Database, Smartphone, Cloud
-} from 'lucide-react';
 
 // MOCKING MDX CONTENT
 const MARKDOWN_CONTENT_1 = `
@@ -83,7 +78,7 @@ export const PROJECTS: Project[] = [
     },
     palette: ['#4F46E5', '#10B981', '#111827', '#F3F4F6'],
     tags: ['Next.js 15', 'Gemini 1.5 Pro', 'D3.js', 'Framer Motion'],
-    image: 'https://picsum.photos/800/600?grayscale',
+    image: 'https://picsum.photos/seed/gemini/800/600',
     links: {
       github: '#',
       demo: '#'
@@ -107,7 +102,7 @@ export const PROJECTS: Project[] = [
     },
     palette: ['#F59E0B', '#3B82F6', '#1E293B', '#CBD5E1'],
     tags: ['TypeScript', 'AST', 'Tailwind v4', 'WebContainers'],
-    image: 'https://picsum.photos/800/601?grayscale',
+    image: 'https://picsum.photos/seed/code/800/601',
     links: {
       github: '#',
       demo: '#'
@@ -123,7 +118,7 @@ export const PROJECTS: Project[] = [
     },
     palette: ['#EC4899', '#8B5CF6', '#18181B', '#E4E4E7'],
     tags: ['Web Audio API', 'Three.js', 'React Three Fiber'],
-    image: 'https://picsum.photos/800/602?grayscale',
+    image: 'https://picsum.photos/seed/audio/800/602',
     links: {
       demo: '#'
     },
@@ -138,7 +133,7 @@ export const PROJECTS: Project[] = [
     },
     palette: ['#EF4444', '#14B8A6', '#0F172A', '#F1F5F9'],
     tags: ['WebGL', 'Yjs', 'WebSockets'],
-    image: 'https://picsum.photos/800/603?grayscale',
+    image: 'https://picsum.photos/seed/voxel/800/603',
     links: {
       github: '#'
     },
@@ -193,30 +188,32 @@ export const POSTS: Post[] = [
   },
 ];
 
+// NOTE: We do NOT import icons here anymore to prevent circular dependency / load issues.
+// Icons are mapped by name in App.tsx
 export const TOOLS: ToolItem[] = [
   // AI & Models
-  { name: 'Gemini 3 Pro', category: 'AI Model', description: 'Advanced Reasoning', icon: Sparkles },
-  { name: 'ChatGPT', category: 'AI Assistant', description: 'GPT-4o', icon: Bot },
-  { name: 'Claude', category: 'AI Assistant', description: '3.5 Sonnet', icon: BrainCircuit },
-  { name: 'Midjourney', category: 'AI Art', description: 'Image Gen', icon: Image },
+  { name: 'Gemini 3 Pro', category: 'AI Model', description: 'Advanced Reasoning' },
+  { name: 'ChatGPT', category: 'AI Assistant', description: 'GPT-4o' },
+  { name: 'Claude', category: 'AI Assistant', description: '3.5 Sonnet' },
+  { name: 'Midjourney', category: 'AI Art', description: 'Image Gen' },
 
   // Development Environment (IDEs)
-  { name: 'VS Code', category: 'IDE', description: 'Code Editor', icon: Code2 },
-  { name: 'Cursor', category: 'IDE', description: 'AI Code Editor', icon: MousePointer2 },
-  { name: 'PuTTY', category: 'Terminal', description: 'SSH Client', icon: TerminalSquare },
-  { name: 'Docker', category: 'DevOps', description: 'Containerization', icon: Container },
+  { name: 'VS Code', category: 'IDE', description: 'Code Editor' },
+  { name: 'Cursor', category: 'IDE', description: 'AI Code Editor' },
+  { name: 'PuTTY', category: 'Terminal', description: 'SSH Client' },
+  { name: 'Docker', category: 'DevOps', description: 'Containerization' },
 
   // Core Tech
-  { name: 'React 19', category: 'Frontend', description: 'Library', icon: Atom },
-  { name: 'TypeScript', category: 'Language', description: 'Type safety', icon: FileCode2 },
-  { name: 'Tailwind CSS', category: 'Styling', description: 'Utility-first', icon: Wind },
-  { name: 'Next.js 15', category: 'Framework', description: 'App Router', icon: Box },
+  { name: 'React 19', category: 'Frontend', description: 'Library' },
+  { name: 'TypeScript', category: 'Language', description: 'Type safety' },
+  { name: 'Tailwind CSS', category: 'Styling', description: 'Utility-first' },
+  { name: 'Next.js 15', category: 'Framework', description: 'App Router' },
   
   // Design & Others
-  { name: 'Figma', category: 'Design', description: 'Prototyping', icon: PenTool },
-  { name: 'Framer', category: 'Design', description: 'Interactive', icon: Smartphone },
-  { name: 'Supabase', category: 'Backend', description: 'Database', icon: Database },
-  { name: 'Vercel', category: 'Deployment', description: 'Hosting', icon: Cloud },
+  { name: 'Figma', category: 'Design', description: 'Prototyping' },
+  { name: 'Framer', category: 'Design', description: 'Interactive' },
+  { name: 'Supabase', category: 'Backend', description: 'Database' },
+  { name: 'Vercel', category: 'Deployment', description: 'Hosting' },
 ];
 
 export const ContentService = {
