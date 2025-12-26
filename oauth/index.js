@@ -35,7 +35,7 @@ const handleCallback = async (req, res) => {
     const { access_token } = response.data;
 
     if (!access_token) {
-      throw new Error('No access_token found');
+      throw new Error('No access_token found in GitHub response');
     }
 
     const content = {
@@ -43,50 +43,69 @@ const handleCallback = async (req, res) => {
       provider: 'github'
     };
 
-    // Prepare the message string
+    // Specific format required by NetlifyCMS/DecapCMS
     const message = "authorization:github:success:" + JSON.stringify(content);
 
-    // HTML Response with Visual Token
-    // We display the token so you can manually copy it if the window closes too fast or postMessage fails.
-    const script = `
+    // Simplified Response HTML
+    // We prioritize RELIABILITY. If postMessage fails, the user sees the token and can copy it.
+    const html = `
       <!DOCTYPE html>
-      <html>
-      <body style="background-color: #09090b; color: #e4e4e7; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center;">
-        <div style="font-size: 24px; margin-bottom: 20px;">✅ Login Successful</div>
-        <div style="color: #71717a; margin-bottom: 20px;">Sending credentials to Lumina...</div>
-        
-        <!-- Debugging: Show Token -->
-        <div style="background: #18181b; padding: 15px; border-radius: 8px; border: 1px solid #27272a; margin-bottom: 20px; max-width: 90%; word-break: break-all;">
-            <div style="font-size: 10px; color: #71717a; margin-bottom: 5px;">DEBUG TOKEN (COPY IF NEEDED)</div>
-            <code style="color: #4ade80; font-size: 12px;">${access_token}</code>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>Login Successful</title>
+        <style>
+          body { background: #111; color: #eee; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; }
+          .card { border: 1px solid #333; padding: 20px; border-radius: 8px; max-width: 500px; width: 100%; }
+          h2 { color: #4ade80; margin-top: 0; }
+          p { color: #888; font-size: 12px; margin-bottom: 15px; }
+          .token-box { width: 100%; background: #000; color: #fff; border: 1px solid #444; padding: 10px; margin-bottom: 10px; font-family: monospace; border-radius: 4px; }
+          button { cursor: pointer; background: #eee; color: #000; border: none; padding: 8px 16px; font-weight: bold; border-radius: 4px; }
+          button:hover { background: #fff; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2>✅ Access Granted</h2>
+          <p>We are attempting to log you in automatically...</p>
+          
+          <div id="manual-section">
+            <p>If this window doesn't close, copy the token below and paste it into the "Manual Token" field on the admin page.</p>
+            <input type="text" class="token-box" value="${access_token}" readonly onclick="this.select()">
+            <button onclick="copyAndClose()">Copy & Close</button>
+          </div>
         </div>
 
         <script>
-          (function() {
-            const message = ${JSON.stringify(message)};
-            
-            function sendMessage() {
-              if (window.opener) {
-                console.log("Sending auth message to opener...");
-                window.opener.postMessage(message, "*");
-              }
+          const message = ${JSON.stringify(message)};
+          
+          // 1. Attempt Auto-Handshake
+          try {
+            if (window.opener) {
+              window.opener.postMessage(message, "*");
+              // Optional: Close after a short delay if we think it worked, 
+              // but keeping it open is safer for debugging rate limits.
+              // setTimeout(() => window.close(), 2000); 
             }
+          } catch (e) {
+            console.error("Auto-handshake failed", e);
+          }
 
-            // Retry strategy
-            sendMessage();
-            setInterval(sendMessage, 800);
-
-            // Close automatically after 5 seconds (Increased time to allow copying if needed)
-            setTimeout(function() {
-              window.close();
-            }, 5000);
-          })();
+          // 2. Manual Fallback
+          function copyAndClose() {
+            const el = document.querySelector('.token-box');
+            el.select();
+            navigator.clipboard.writeText(el.value).then(() => {
+              alert('Token copied!');
+              // window.close(); // Optional: user might want to keep it
+            });
+          }
         </script>
       </body>
       </html>
     `;
 
-    res.send(script);
+    res.send(html);
 
   } catch (error) {
     console.error('Auth Error:', error.message);
@@ -97,6 +116,7 @@ const handleCallback = async (req, res) => {
 // --- ROUTES ---
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
+// Support both path structures for flexibility
 app.get('/oauth/auth', handleAuth);
 app.get('/oauth/callback', handleCallback);
 

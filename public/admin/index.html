@@ -5,25 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lumina Content Manager</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #09090b; color: #e4e4e7; }
-    .loading-container {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: #09090b; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: -1;
+    /* Minimal Reset & Dark Theme */
+    * { box-sizing: border-box; }
+    body { 
+      margin: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background-color: #09090b; 
+      color: #e4e4e7; 
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    .loading-spinner {
-      width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.1);
-      border-top-color: #6366f1; border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin-bottom: 20px;
+
+    /* Loading / Login Layer */
+    #auth-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: #09090b;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease-out;
     }
-    .status-text {
-      font-size: 12px; font-family: monospace; opacity: 0.5; transition: opacity 0.3s;
+
+    .loader {
+      width: 40px; height: 40px; 
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #6366f1; 
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 24px;
     }
+
+    h1 { font-size: 20px; font-weight: 300; letter-spacing: -0.5px; margin: 0 0 8px 0; }
+    .status { font-family: monospace; font-size: 12px; color: #71717a; margin-bottom: 32px; }
+
+    /* Manual Fallback Section */
+    .manual-entry {
+      width: 90%;
+      max-width: 320px;
+      padding: 16px;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      background: #18181b;
+      text-align: center;
+    }
+    
+    .manual-details { display: none; margin-top: 12px; text-align: left; }
+    .manual-details.open { display: block; }
+    
+    .toggle-btn {
+      background: none; border: none; color: #71717a; 
+      font-size: 12px; text-decoration: underline; cursor: pointer;
+    }
+    .toggle-btn:hover { color: #fff; }
+
+    input.token-input {
+      width: 100%;
+      background: #09090b;
+      border: 1px solid #3f3f46;
+      color: #fff;
+      padding: 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-family: monospace;
+    }
+    input.token-input:focus { outline: none; border-color: #6366f1; }
+
+    button.inject-btn {
+      width: 100%;
+      background: #27272a;
+      color: #fff;
+      border: none;
+      padding: 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button.inject-btn:hover { background: #6366f1; }
+
     @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .hidden { opacity: 0; pointer-events: none; }
   </style>
 
   <script>
-    // 🛠️ LUMINA NETWORK PATCH 🛠️
+    // 🛠️ CONFIG FETCH PATCH 🛠️
+    // Ensures config.yml is read as YAML to prevent MIME type errors
     (function() {
       const originalFetch = window.fetch;
       window.fetch = async function(input, init) {
@@ -40,7 +112,6 @@
               headers: newHeaders
             });
           } catch (err) {
-            console.warn('[Lumina Patch] Fetch error, falling back:', err);
             return originalFetch(input, init);
           }
         }
@@ -48,47 +119,79 @@
       };
     })();
 
-    // 🔐 LUMINA AUTH DEBUGGER & HANDLER 🔐
-    window.addEventListener("message", (event) => {
-      // Relaxed logging
-      console.log(`[Lumina Auth] Message from: ${event.origin}`);
+    // 🔐 AUTH LOGIC 🔐
+    function setStatus(msg, type = 'normal') {
+      const el = document.getElementById('status-text');
+      if (el) {
+        el.innerText = msg;
+        el.style.color = type === 'success' ? '#4ade80' : '#71717a';
+      }
+    }
 
-      const data = event.data;
+    function injectToken(token) {
+      if (!token || !token.trim()) return;
       
+      const provider = 'github';
+      // Decap CMS listens for 'authorization:provider:success:{token: ...}'
+      const data = { token: token.trim(), provider: provider };
+      const message = `authorization:${provider}:success:${JSON.stringify(data)}`;
+      
+      console.log('[Lumina Auth] Injecting token via postMessage...');
+      window.postMessage(message, '*');
+      
+      setStatus('TOKEN RECEIVED. LOADING CMS...', 'success');
+      
+      // Fade out auth layer
+      setTimeout(() => {
+        document.getElementById('auth-layer').classList.add('hidden');
+      }, 1000);
+    }
+
+    // Listener for Popup communication
+    window.addEventListener("message", (event) => {
+      const data = event.data;
       if (typeof data === 'string' && data.startsWith('authorization:github:success:')) {
-        console.log("%c[Lumina Auth] ✅ Token Received!", "color: #4ade80; font-weight: bold; font-size: 14px;");
-        
-        const statusEl = document.getElementById('status-text');
-        if (statusEl) {
-          statusEl.innerText = "TOKEN RECEIVED. HANDSHAKING...";
-          statusEl.style.color = "#4ade80";
-          statusEl.style.opacity = "1";
-        }
+        // Extract token just to verify, then re-emit or let CMS handle it
+        // Note: Decap CMS listens to the SAME event on 'window'. 
+        // We just intercept to update UI.
+        setStatus('AUTHENTICATED VIA POPUP', 'success');
+        setTimeout(() => {
+          document.getElementById('auth-layer').classList.add('hidden');
+        }, 500);
       }
     }, false);
 
-    // 🛑 MANUAL LOGIN BACKDOOR 🛑
-    // 如果自动登录失败，请在控制台输入：
-    // window.manualLogin("your_token_here")
-    window.manualLogin = function(token) {
-        if (!token) {
-            alert("Please provide a token.");
-            return;
-        }
-        const content = { token: token, provider: 'github' };
-        const message = "authorization:github:success:" + JSON.stringify(content);
-        console.log("Injecting manual login message...");
-        window.postMessage(message, "*");
-        document.getElementById('status-text').innerText = "MANUAL INJECTION...";
+    // Manual Input Handler
+    function toggleManual() {
+      document.getElementById('manual-details').classList.toggle('open');
     }
   </script>
 </head>
 <body>
-  <div class="loading-container">
-    <div class="loading-spinner"></div>
-    <div id="status-text" class="status-text">INITIALIZING SECURE LINK</div>
-  </div>
   
+  <!-- Auth Overlay -->
+  <div id="auth-layer">
+    <div class="loader"></div>
+    <h1>Lumina Control</h1>
+    <div id="status-text" class="status">WAITING FOR SATELLITE LINK...</div>
+
+    <div class="manual-entry">
+      <button class="toggle-btn" onclick="toggleManual()">Having trouble logging in?</button>
+      <div id="manual-details" class="manual-details">
+        <p style="font-size: 10px; color: #71717a; margin-bottom: 8px;">
+          1. Click "Login with GitHub" when prompt appears.<br>
+          2. If the window doesn't close, copy the token displayed there.<br>
+          3. Paste it below.
+        </p>
+        <input type="text" id="manual-token" class="token-input" placeholder="Paste gh_token here..." />
+        <button class="inject-btn" onclick="injectToken(document.getElementById('manual-token').value)">
+          Verify & Login
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decap CMS Entry Point -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
