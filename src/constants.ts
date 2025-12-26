@@ -48,7 +48,7 @@ export const TRANSLATIONS: Record<string, Translation> = {
 // You can get these values from https://giscus.app/
 export const GISCUS_CONFIG = {
   repo: "uschan/lumina",
-  repoId: "R_kgDONXwBBw",
-  category: "General",
-  categoryId: "DIC_kwDONXwBB84Ckw_v"
+  repoId: "R_kgDOQsz9Zw",
+  category: "Announcements",
+  categoryId: "DIC_kwDOQsz9Z84C0RA3"
 };
