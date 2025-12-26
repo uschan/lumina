@@ -4,9 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lumina Content Manager</title>
+  
+  <link href="config.yml" type="text/yaml" rel="cms-config-url">
 </head>
 <body>
-  <!-- Include the script that builds the page and powers Decap CMS -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+
+  <script>
+    // 检查 LocalStorage 是否有手动注入的 Token
+    const user = localStorage.getItem('decap-cms-user');
+    if (user) {
+      console.log("🚀 检测到本地已存在用户信息，准备初始化...");
+    }
+  </script>
 </body>
 </html>
