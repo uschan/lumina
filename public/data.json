@@ -2,36 +2,35 @@
   "projects": [
     {
       "challenge": {
-        "en": "Processing real-time video streams and synchronizing LLM responses without inducing latency was the primary bottleneck. Traditional request/response cycles were too slow for a \"live\" feel.",
-        "zh": "处理实时视频流并同步 LLM 响应而不产生延迟是主要的瓶颈。传统的请求/响应周期对于“实时”体验来说太慢了。"
+        "en": "In our fast-paced, atomized society, we often suffer from \"emotional illiteracy.\" We experience profound moments—the solitude of a forest, a vague longing for the past—yet lack the precise vocabulary to articulate them. The language barrier does more than hinder communication; it causes unique cultural experiences to lose their soul in direct translation, leaving us with unspoken feelings and emotional isolation.",
+        "zh": "在快节奏的原子化社会中，我们的情感表达日益匮乏。我们时常经历某些深刻的瞬间——如置身森林的孤独、对往日的莫名怀念——却因缺乏精准的词汇而无法言说。语言的巴别塔不仅阻隔了交流，更让许多独特的文化体验在粗暴的直译中流失了灵魂，导致了现代人的“失语”与心灵孤岛。"
       },
       "featured": true,
-      "title": "Gemini Lens",
+      "title": "Sonder.Study",
       "tags": [
-        "Next.js 15",
-        "Gemini 1.5 Pro",
-        "D3.js",
-        "Framer Motion"
+        "Linguistics",
+        "Digital Museum",
+        "Generative AI"
       ],
       "solution": {
-        "en": "Implemented a WebSocket architecture combined with Gemini's streaming API. Video frames are sampled at 1fps and sent to the model, with differential updates pushed to the UI state.",
-        "zh": "实施了 WebSocket 架构并结合 Gemini 的流式 API。视频帧以 1fps 采样并发送到模型，差异更新被推送到 UI 状态。"
+        "en": "We have mapped the landscape of human emotion.\n1、Cultural Curation: A hand-picked collection of 80+ unique words with poetic translations that capture their true essence (e.g., translating Waldeinsamkeit as \"Forest Solitude\").\n2、AI Integration: Powered by Google Gemini API to generate atmospheric \"Dark Zen\" imagery and deep philosophical insights, transforming abstract concepts into tangible visual experiences.\n3、Immersive Design: Utilizing minimalist aesthetics and fluid animations to create a tranquil space where users can reconnect with themselves and the world through language.",
+        "zh": "我们绘制了一张“人类情感的地图”。\n1、文化甄选：精选全球 80+ 个独特词汇，提供“一字千钧”的中文雅译（如将 Waldeinsamkeit 译为“林中孤寂”）。\n2、AI 赋能：集成 Google Gemini API，为每个词汇实时生成意境深远的视觉图像与哲学洞察，将抽象概念具象化。\n3、沉浸体验：采用极简主义设计与流体动画，创造出静谧的阅读空间，帮助用户在探索词汇的过程中，重新连接自我与世界。"
       },
       "links": {
-        "github": "https://github.com",
-        "demo": "https://gemini.google.com"
+        "github": "https://github.com/uschan",
+        "demo": "https://sonder.study"
       },
       "id": "1",
-      "image": "https://picsum.photos/seed/gemini/800/600",
+      "image": "/images/uploads/snipaste_2025-12-27_02-33-09.png",
       "palette": [
-        "#4F46E5",
-        "#10B981",
-        "#111827",
-        "#F3F4F6"
+        "#09090b",
+        "#f59e0b",
+        "#10b981",
+        "#f43f5e"
       ],
       "description": {
-        "en": "A multimodal analysis dashboard powered by Google Gemini 1.5 Pro, featuring real-time video understanding.",
-        "zh": "基于 Google Gemini 1.5 Pro 的多模态分析仪表盘，支持实时视频理解与语义检索。"
+        "en": "\"Small Words, Big Meanings\" is a curated digital museum dedicated to the world's untranslatable words. By blending linguistics, visual arts, and modern AI, it captures the subtle emotional granularities and cultural wisdom often lost in translation. Wrapped in an immersive \"Dark Zen\" aesthetic, it serves as a sanctuary for concepts ranging from the Japanese Komorebi to the Portuguese Saudade.",
+        "zh": "“小词大意”是一个致力于收集世界各地“无法直译”词汇的数字博物馆。它将语言学、视觉艺术与现代 AI 技术完美融合，通过沉浸式的“暗黑禅意”（Dark Zen）美学，捕捉那些遗落在翻译缝隙中的微妙情感与文化智慧。从日语的“木漏光”到葡萄牙语的“渴慕”，这里是人类细腻情感的栖息地。"
       }
     },
     {
