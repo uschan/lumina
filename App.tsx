@@ -230,7 +230,7 @@ const AppContent: React.FC<{
       {!isLanding && (
         <>
           <BackToTop />
-          <footer className="relative z-10 py-8 border-t border-gray-200 dark:border-zinc-900 mt-6 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm transition-colors duration-500">
+          <footer className="relative z-10 py-4 border-t border-gray-200 dark:border-zinc-900 mt-4 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm transition-colors duration-500">
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 opacity-60 hover:opacity-100 transition-opacity">
               
               <div className="flex flex-col md:flex-row items-center gap-4 text-sm">
