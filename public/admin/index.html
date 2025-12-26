@@ -5,50 +5,52 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lumina Content Manager</title>
-  
   <link href="config.yml" type="text/yaml" rel="cms-config-url">
+  <style>
+    /* Minimal Dark Loading State to prevent white flash */
+    body { background: #09090b; color: #71717a; font-family: sans-serif; margin: 0; }
+  </style>
 </head>
 <body>
-  <!-- Use a robust, specific version to avoid redirects -->
   <script src="https://unpkg.com/decap-cms@3.1.2/dist/decap-cms.js"></script>
-
   <script>
-    // Robust Auth Handler
+    // Silent Auth Handler
     window.addEventListener("message", (event) => {
-      // 1. Verify Origin (Optional but recommended for security)
-      // if (event.origin !== "https://gemini.wildsalt.me") return;
-
-      // 2. Strict Content Filter
+      // Security Check
       if (typeof event.data !== 'string' || !event.data.startsWith("authorization:github:success:")) {
         return;
       }
-
-      console.log("[Admin] Received auth message.");
 
       try {
         const jsonStr = event.data.replace("authorization:github:success:", "");
         const data = JSON.parse(jsonStr);
         
         if (data.token) {
-          // Store token in the format Decap CMS expects
+          // 1. Construct the user object
           const userObj = JSON.stringify({ 
             token: data.token, 
             provider: 'github' 
           });
+
+          // 2. CRITICAL FIX: Check if we already have this token.
+          // If the token in localStorage matches the one we just received, 
+          // DO NOT RELOAD. This stops the infinite loop.
+          const existingDecap = localStorage.getItem("decap-cms-user");
+          const existingNetlify = localStorage.getItem("netlify-cms-user");
+
+          if (existingDecap === userObj || existingNetlify === userObj) {
+            return; 
+          }
           
+          // 3. Save only if new
           localStorage.setItem("decap-cms-user", userObj);
-          // Legacy support just in case
           localStorage.setItem("netlify-cms-user", userObj);
           
-          console.log("[Admin] Token saved. Reloading interface...");
-          
-          // Force reload to clear any stale state
-          setTimeout(() => {
-             window.location.reload();
-          }, 200);
+          // 4. Reload once to initialize CMS with new token
+          window.location.reload();
         }
       } catch(e) {
-        console.error("[Admin] Auth Error:", e);
+        // Silent fail
       }
     });
   </script>

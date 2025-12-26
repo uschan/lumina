@@ -1,3 +1,4 @@
+
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -56,7 +57,6 @@ const callbackHandler = async (req, res) => {
     const messageStr = "authorization:github:success:" + JSON.stringify(content);
     
     // The user object to store in LocalStorage (stringified JSON)
-    // Decap CMS looks for "netlify-cms-user" or "decap-cms-user" containing { token: ... }
     const userStorageValue = JSON.stringify({
       token: accessToken,
       backendName: 'github' 
@@ -65,37 +65,61 @@ const callbackHandler = async (req, res) => {
     const script = `
       <!DOCTYPE html>
       <html>
+      <head>
+        <style>
+          body { 
+            background: #09090b; 
+            color: #fff; 
+            display: flex; 
+            height: 100vh; 
+            justify-content: center; 
+            align-items: center; 
+            font-family: monospace; 
+            margin: 0;
+            overflow: hidden;
+          }
+          .loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            animation: fadeOut 0.5s ease-in-out 1s forwards;
+          }
+          .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          }
+          @keyframes spin { to { transform: rotate(360deg); } }
+          @keyframes fadeOut { to { opacity: 0; } }
+        </style>
+      </head>
       <body>
+      <div class="loader">
+        <div class="spinner"></div>
+        <div>AUTHENTICATING...</div>
+      </div>
       <script>
         (function() {
           const origin = window.location.origin;
           
-          console.log("[Auth Popup] Authenticated successfully.");
-          
-          // 1. DIRECT WRITE (The "Nuclear" Option)
-          // Since popup and opener are same-domain, we can write directly to storage.
           try {
-             // Write to both legacy and new keys to be 100% sure
+             // 1. Direct Write
              localStorage.setItem("netlify-cms-user", '${userStorageValue}');
              localStorage.setItem("decap-cms-user", '${userStorageValue}');
-             console.log("[Auth Popup] Token written to LocalStorage directly.");
-          } catch(e) {
-             console.error("[Auth Popup] LS Write failed:", e);
-          }
+          } catch(e) {}
 
-          // 2. STANDARD POST MESSAGE
+          // 2. Post Message
           if (window.opener) {
-            console.log("[Auth Popup] Sending message to opener at: " + origin);
-            // We use 'origin' to ensure exact match, no trailing slashes
             window.opener.postMessage('${messageStr}', origin);
-            
-            // Also send '*' just in case the origin check is failing due to http/https mismatch in dev
             window.opener.postMessage('${messageStr}', '*');
           }
           
-          // 3. CLOSE
-          document.write("Authentication successful. Closing...");
-          setTimeout(() => { window.close(); }, 100);
+          // 3. Close rapidly
+          setTimeout(() => { window.close(); }, 500);
         })();
       </script>
       </body>
