@@ -206,14 +206,13 @@
         div.innerHTML = '<h1>FATAL ERROR</h1><p>' + msg + '</p><p>' + url + ':' + line + ':' + col + '</p>';
       };
       
-      // FORCE UPDATE: Unregister any existing service workers on load to ensure new "Network First" worker takes over.
+      // FORCE UNREGISTER ALL SERVICE WORKERS
+      // This ensures we kill any "zombie" cache-first workers causing white screens.
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
            for(let registration of registrations) {
-              if (registration.active && registration.active.scriptURL.indexOf('sw.js') === -1) {
-                  // If it's some unknown old worker, kill it
-                  registration.unregister();
-              }
+              console.log('Unregistering SW:', registration);
+              registration.unregister();
            }
         });
       }
@@ -228,26 +227,5 @@
     <div id="root"></div>
     <!-- CRITICAL: Entry point for Vite/React -->
     <script type="module" src="/index.tsx"></script>
-    
-    <!-- PWA Service Worker Registration -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-             // Register the updated SW
-             navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('SW Registered (v4):', registration);
-              
-              // If there's a waiting worker (update found), skip waiting and reload
-              if (registration.waiting) {
-                  registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-              }
-            })
-            .catch(registrationError => {
-              console.log('SW registration failed: ', registrationError);
-            });
-        });
-      }
-    </script>
   </body>
 </html>
