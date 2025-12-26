@@ -30,7 +30,7 @@ const Comments: React.FC<CommentsProps> = () => {
           emitMetadata="0"
           inputPosition="top"
           theme={isDark ? 'transparent_dark' : 'light'}
-          lang="en"
+          lang="zh-CN"
           loading="lazy"
         />
       </div>
