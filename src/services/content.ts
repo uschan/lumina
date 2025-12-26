@@ -162,6 +162,7 @@ export const POSTS: Post[] = [
       en: 'How generative models are shifting interfaces from command-based to intent-based interactions.',
       zh: '生成式模型如何将界面交互从基于命令转变为基于意图。',
     },
+    category: 'design',
     aiAnalysis: {
         en: 'Summary: This article explores the transition from GUI to NUI (Natural User Interfaces). Key takeaway: Latency reduction and Optimistic UI patterns are critical for perceived performance in AI apps.',
         zh: 'AI 摘要：本文探讨了从 GUI 到 NUI（自然用户界面）的转变。核心观点：降低延迟和乐观 UI 模式对于 AI 应用的感知性能至关重要。'
@@ -178,6 +179,7 @@ export const POSTS: Post[] = [
       en: 'A deep dive into creating complex bento grids with utility classes.',
       zh: '深入探讨如何使用原子类构建复杂的 Bento Grid 布局。',
     },
+    category: 'tech',
     aiAnalysis: {
         en: 'Summary: A technical guide on implementing Bento Grids using CSS Grid and Tailwind. Emphasizes hierarchy, density, and balance as key design principles.',
         zh: 'AI 摘要：关于使用 CSS Grid 和 Tailwind 实现 Bento Grid 的技术指南。强调层次结构、密度和平衡作为关键设计原则。'
@@ -194,6 +196,7 @@ export const POSTS: Post[] = [
       en: 'Key takeaways from the latest research papers on quantization.',
       zh: '关于量化技术的最新研究论文摘要。',
     },
+    category: 'daily',
     content: '## Summary\n\nQuantization is key.',
     date: '2023-11-15',
     type: 'brief',

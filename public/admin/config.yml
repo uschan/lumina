@@ -38,16 +38,16 @@ collections:
                 required: false
                 collapsed: true
                 fields:
-                  - {label: "English", name: "en", widget: "text", required: false}
-                  - {label: "Chinese", name: "zh", widget: "text", required: false}
+                  - {label: "English", name: "en", widget: "markdown", required: false}
+                  - {label: "Chinese", name: "zh", widget: "markdown", required: false}
               - label: "Solution (Optional)"
                 name: "solution"
                 widget: "object"
                 required: false
                 collapsed: true
                 fields:
-                  - {label: "English", name: "en", widget: "text", required: false}
-                  - {label: "Chinese", name: "zh", widget: "text", required: false}
+                  - {label: "English", name: "en", widget: "markdown", required: false}
+                  - {label: "Chinese", name: "zh", widget: "markdown", required: false}
               - label: "Tech Stack Tags"
                 name: "tags"
                 widget: "list"
@@ -73,6 +73,14 @@ collections:
             fields:
               - {label: "ID", name: "id", widget: "string"}
               - {label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD", value_format: "YYYY-MM-DD"}
+              - label: "Category"
+                name: "category"
+                widget: "select"
+                options: 
+                  - { label: "Tech Issues", value: "tech" }
+                  - { label: "Design Systems", value: "design" }
+                  - { label: "Daily Notes", value: "daily" }
+                  - { label: "WildSalt", value: "wild" }
               - label: "Type"
                 name: "type"
                 widget: "select"
@@ -95,6 +103,7 @@ collections:
                 widget: "object"
                 required: false
                 collapsed: true
+                description: "Leave empty to allow frontend to generate live analysis via Gemini API"
                 fields:
                   - {label: "English", name: "en", widget: "text", required: false}
                   - {label: "Chinese", name: "zh", widget: "text", required: false}

@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, Post } from '../types';
-import { ArrowLeft, Clock, Calendar, List, Sparkles, Share2, ThumbsUp, Heart, Rocket, FileText, Check, ExternalLink, Quote } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, List, Sparkles, Share2, ThumbsUp, Heart, Rocket, FileText, Check, ExternalLink, Quote, RefreshCw } from 'lucide-react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import { GoogleGenAI } from "@google/genai";
 import SupportWidget from '../components/SupportWidget';
 import CodeBlock from '../components/CodeBlock';
 import Comments from '../components/Comments';
@@ -22,6 +23,10 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
   const [reactions, setReactions] = useState({ like: 124, heart: 45, rocket: 89 });
   const [activeId, setActiveId] = useState<string>('');
   
+  // AI State
+  const [aiContent, setAiContent] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  
   // Scroll Progress Logic
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -30,13 +35,23 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
     restDelta: 0.001
   });
   
-  // AI Typewriter Effect
-  const [displayedAnalysis, setDisplayedAnalysis] = useState('');
+  // Initialize AI Content (Prefers CMS data, falls back to null)
   useEffect(() => {
     if (post?.aiAnalysis?.[lang]) {
+        setAiContent(post.aiAnalysis[lang]);
+    } else {
+        setAiContent(null);
+    }
+  }, [post, lang]);
+
+  // Typewriter Effect for AI
+  const [displayedAnalysis, setDisplayedAnalysis] = useState('');
+  useEffect(() => {
+    if (aiContent) {
         setDisplayedAnalysis('');
         let i = 0;
-        const text = post.aiAnalysis[lang];
+        const text = aiContent;
+        // Faster typing for better UX
         const timer = setInterval(() => {
             if (i < text.length) {
                 setDisplayedAnalysis(prev => prev + text.charAt(i));
@@ -44,10 +59,10 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
             } else {
                 clearInterval(timer);
             }
-        }, 30);
+        }, 15);
         return () => clearInterval(timer);
     }
-  }, [post, lang]);
+  }, [aiContent]);
 
   // TOC Active Highlighting Logic
   useEffect(() => {
@@ -85,6 +100,35 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
 
   const incrementReaction = (type: keyof typeof reactions) => {
      setReactions(prev => ({ ...prev, [type]: prev[type] + 1 }));
+  };
+
+  // REAL GEMINI INTEGRATION
+  const generateRealAnalysis = async () => {
+      if (!post?.content || isGenerating) return;
+
+      setIsGenerating(true);
+      try {
+          // Initialize client with environment key (Assume configured in env)
+          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+          
+          const prompt = lang === 'en' 
+            ? `Summarize the following markdown content for a technical developer audience in 2-3 concise sentences. Content: ${post.content}`
+            : `用中文为技术开发者受众总结以下 Markdown 内容，2-3句话简明扼要。内容：${post.content}`;
+
+          const response = await ai.models.generateContent({
+              model: 'gemini-3-flash-preview',
+              contents: prompt,
+          });
+
+          if (response.text) {
+              setAiContent(response.text);
+          }
+      } catch (error) {
+          console.error("Gemini Generation Error:", error);
+          alert("Failed to generate analysis. Check API Key configuration.");
+      } finally {
+          setIsGenerating(false);
+      }
   };
 
   if (!post) {
@@ -188,21 +232,49 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                 </h1>
 
                 {/* AI Analysis Block */}
-                {post.aiAnalysis && (
-                    <div className="mb-10 p-6 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 backdrop-blur-sm relative overflow-hidden group">
-                        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-mono text-sm font-bold mb-3 uppercase tracking-wider">
-                            <Sparkles size={14} className="animate-pulse" />
+                <div className="mb-10 p-6 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 backdrop-blur-sm relative overflow-hidden group">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-mono text-sm font-bold uppercase tracking-wider">
+                            <Sparkles size={14} className={isGenerating ? "animate-spin" : "animate-pulse"} />
                             {lang === 'en' ? 'AI Assessment' : 'AI 智能评析'}
                         </div>
-                        <p className="text-sm md:text-base leading-relaxed font-mono text-foreground/80 relative z-10">
-                            {displayedAnalysis}
-                            <span className="inline-block w-2 h-4 bg-indigo-500 ml-1 animate-pulse"/>
-                        </p>
-                        <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity duration-500">
-                            <Sparkles size={120} />
-                        </div>
+                        <button 
+                            onClick={generateRealAnalysis}
+                            disabled={isGenerating}
+                            className="p-1.5 rounded-full hover:bg-indigo-500/10 text-muted-foreground hover:text-indigo-500 transition-colors"
+                            title={lang === 'en' ? "Regenerate Analysis with Gemini" : "使用 Gemini 重新分析"}
+                        >
+                            <RefreshCw size={14} className={isGenerating ? "animate-spin" : ""} />
+                        </button>
                     </div>
-                )}
+
+                    <div className="min-h-[60px] relative z-10">
+                        {aiContent ? (
+                            <p className="text-sm md:text-base leading-relaxed font-mono text-foreground/80">
+                                {displayedAnalysis}
+                                {displayedAnalysis.length < aiContent.length && (
+                                    <span className="inline-block w-2 h-4 bg-indigo-500 ml-1 animate-pulse"/>
+                                )}
+                            </p>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50">
+                                <p className="text-sm italic mb-2">
+                                    {lang === 'en' ? 'Analysis not initialized.' : '尚未生成分析。'}
+                                </p>
+                                <button 
+                                    onClick={generateRealAnalysis}
+                                    className="text-xs px-3 py-1.5 rounded-full border border-dashed border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 hover:bg-indigo-500/5 transition-all"
+                                >
+                                    {isGenerating ? 'Analyzing...' : (lang === 'en' ? 'Initialize Gemini Protocol' : '启动 Gemini 分析协议')}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none">
+                        <Sparkles size={120} />
+                    </div>
+                </div>
 
                 <div className="prose prose-zinc dark:prose-invert prose-lg max-w-none 
                   prose-p:leading-relaxed prose-p:text-muted-foreground
