@@ -1,0 +1,9 @@
+{
+  "tools": [
+    {
+      "name": "test",
+      "category": "test",
+      "description": "test"
+    }
+  ]
+}
