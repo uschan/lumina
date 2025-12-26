@@ -98,15 +98,24 @@ const AppContent: React.FC<{
         return res.json();
       })
       .then(data => {
+        // Robustness Check: If data.json exists but is empty or missing keys (e.g. freshly created by CMS),
+        // we default to empty arrays instead of undefined to prevent crashes in .filter() or .map().
+        
+        if (!data) return;
+
+        const rawProjects = Array.isArray(data.projects) ? data.projects : [];
+        const rawPosts = Array.isArray(data.posts) ? data.posts : [];
+        const rawTools = Array.isArray(data.tools) ? data.tools : [];
+
         // Map icons back to tools since JSON only has names
-        const toolsWithIcons = data.tools.map((t: any) => ({
+        const toolsWithIcons = rawTools.map((t: any) => ({
           ...t,
           icon: getIconForTool(t.name)
         }));
         
         setContent({
-          projects: data.projects,
-          posts: data.posts,
+          projects: rawProjects,
+          posts: rawPosts,
           tools: toolsWithIcons
         });
       })
