@@ -75,7 +75,7 @@ const AppContent: React.FC<{
   const location = useLocation();
   const isLanding = location.pathname === '/';
 
-  // Initial State: Use fallback content service to prevent initial flash of empty state
+  // Initial State: Use fallback content service
   const [content, setContent] = useState<{
     projects: Project[];
     posts: Post[];
@@ -100,19 +100,27 @@ const AppContent: React.FC<{
       .then(data => {
         if (!data) return;
 
-        // EXTREME DEFENSE: Ensure arrays exist even if JSON is partial
-        const rawProjects = safeArray<Project>(data.projects);
-        const rawPosts = safeArray<Post>(data.posts);
-        const rawTools = safeArray<any>(data.tools);
+        // SAFE GUARD: If data.json exists but arrays are empty (e.g. initial CMS state),
+        // fallback to ContentService to ensure the site isn't blank.
+        const fetchedProjects = safeArray<Project>(data.projects);
+        const fetchedPosts = safeArray<Post>(data.posts);
+        const fetchedTools = safeArray<any>(data.tools);
 
-        const toolsWithIcons = rawTools.map((t) => ({
-          ...t,
-          icon: getIconForTool(t.name)
+        const validProjects = fetchedProjects.length > 0 ? fetchedProjects : ContentService.getProjects();
+        const validPosts = fetchedPosts.length > 0 ? fetchedPosts : ContentService.getPosts();
+        const validTools = fetchedTools.length > 0 ? fetchedTools : ContentService.getTools(); // Note: raw tool data needs icon mapping
+
+        // We map icons for tools regardless of source (JSON tools lack icon functions)
+        // If falling back to ContentService.getTools(), they already have icons, but re-mapping is safe 
+        // because we map based on 'name'.
+        const toolsWithIcons = (fetchedTools.length > 0 ? fetchedTools : ContentService.getTools()).map((tool: any) => ({
+          ...tool,
+          icon: getIconForTool(tool.name)
         }));
         
         setContent({
-          projects: rawProjects,
-          posts: rawPosts,
+          projects: validProjects,
+          posts: validPosts,
           tools: toolsWithIcons
         });
       })
