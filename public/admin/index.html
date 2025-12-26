@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html>
 <head>
@@ -8,49 +9,46 @@
   <link href="config.yml" type="text/yaml" rel="cms-config-url">
 </head>
 <body>
-  <!-- Use a specific version instead of ^3.0.0 to prevent 302 redirects and version conflicts -->
+  <!-- Use a robust, specific version to avoid redirects -->
   <script src="https://unpkg.com/decap-cms@3.1.2/dist/decap-cms.js"></script>
 
   <script>
+    // Robust Auth Handler
     window.addEventListener("message", (event) => {
-      // 1. Strict Filter
+      // 1. Verify Origin (Optional but recommended for security)
+      // if (event.origin !== "https://gemini.wildsalt.me") return;
+
+      // 2. Strict Content Filter
       if (typeof event.data !== 'string' || !event.data.startsWith("authorization:github:success:")) {
         return;
       }
 
-      // 2. Loop Prevention: Check if valid token already exists
-      const existing = localStorage.getItem("decap-cms-user") || localStorage.getItem("netlify-cms-user");
-      if (existing) {
-        try {
-          if (JSON.parse(existing).token) {
-            console.log("[Admin] ✅ Token exists. Loop stopped.");
-            return; 
-          }
-        } catch (e) {}
-      }
+      console.log("[Admin] Received auth message.");
 
-      // 3. Parse and Save
       try {
         const jsonStr = event.data.replace("authorization:github:success:", "");
         const data = JSON.parse(jsonStr);
         
         if (data.token) {
-          // Fusion: Include both provider and backendName for maximum compatibility
+          // Store token in the format Decap CMS expects
           const userObj = JSON.stringify({ 
             token: data.token, 
-            provider: 'github',
-            backendName: 'github' 
+            provider: 'github' 
           });
           
-          localStorage.setItem("netlify-cms-user", userObj);
           localStorage.setItem("decap-cms-user", userObj);
+          // Legacy support just in case
+          localStorage.setItem("netlify-cms-user", userObj);
           
-          console.log("[Admin] 💾 Token saved. Reloading...");
-          // Added small delay to ensure storage write and fixed syntax
-          setTimeout(() => window.location.reload(), 50);
+          console.log("[Admin] Token saved. Reloading interface...");
+          
+          // Force reload to clear any stale state
+          setTimeout(() => {
+             window.location.reload();
+          }, 200);
         }
       } catch(e) {
-        console.error("[Admin] Auth parse error", e);
+        console.error("[Admin] Auth Error:", e);
       }
     });
   </script>

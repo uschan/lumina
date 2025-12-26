@@ -1,10 +1,9 @@
+
 backend:
   name: github
   repo: uschan/lumina
   branch: main
-  # The root domain where the OAuth server is hosted
   base_url: https://gemini.wildsalt.me
-  # The path to the authorization endpoint (relative to base_url)
   auth_endpoint: oauth/auth
 
 media_folder: "public/images/uploads"
@@ -37,16 +36,18 @@ collections:
                 name: "challenge"
                 widget: "object"
                 required: false
+                collapsed: true
                 fields:
-                  - {label: "English", name: "en", widget: "text"}
-                  - {label: "Chinese", name: "zh", widget: "text"}
+                  - {label: "English", name: "en", widget: "text", required: false}
+                  - {label: "Chinese", name: "zh", widget: "text", required: false}
               - label: "Solution (Optional)"
                 name: "solution"
                 widget: "object"
                 required: false
+                collapsed: true
                 fields:
-                  - {label: "English", name: "en", widget: "text"}
-                  - {label: "Chinese", name: "zh", widget: "text"}
+                  - {label: "English", name: "en", widget: "text", required: false}
+                  - {label: "Chinese", name: "zh", widget: "text", required: false}
               - label: "Tech Stack Tags"
                 name: "tags"
                 widget: "list"
@@ -93,9 +94,10 @@ collections:
                 name: "aiAnalysis"
                 widget: "object"
                 required: false
+                collapsed: true
                 fields:
-                  - {label: "English", name: "en", widget: "text"}
-                  - {label: "Chinese", name: "zh", widget: "text"}
+                  - {label: "English", name: "en", widget: "text", required: false}
+                  - {label: "Chinese", name: "zh", widget: "text", required: false}
               - label: "Content (Markdown)"
                 name: "content"
                 widget: "markdown"

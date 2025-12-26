@@ -55,6 +55,8 @@
         "en": "Spatial audio generation platform for virtual environments.",
         "zh": "用于虚拟环境的空间音频生成平台。"
       },
+      "challenge": {},
+      "solution": {},
       "palette": ["#EC4899", "#8B5CF6", "#18181B", "#E4E4E7"],
       "tags": ["Web Audio API", "Three.js", "React Three Fiber"],
       "image": "https://picsum.photos/seed/audio/800/602",
@@ -70,6 +72,8 @@
         "en": "Browser-based 3D voxel editor with collaborative features.",
         "zh": "基于浏览器的 3D 体素编辑器，支持多人协作。"
       },
+      "challenge": {},
+      "solution": {},
       "palette": ["#EF4444", "#14B8A6", "#0F172A", "#F1F5F9"],
       "tags": ["WebGL", "Yjs", "WebSockets"],
       "image": "https://picsum.photos/seed/voxel/800/603",
