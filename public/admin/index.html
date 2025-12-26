@@ -12,47 +12,45 @@
   <script src="https://unpkg.com/decap-cms@3.1.2/dist/decap-cms.js"></script>
 
   <script>
-    // Manual Listener: Catches the auth token if Decap CMS misses it.
     window.addEventListener("message", (event) => {
-      // 1. Strict Filter: Only accept messages that are strings and match the Decap CMS protocol
+      // 1. Strict Filter
       if (typeof event.data !== 'string' || !event.data.startsWith("authorization:github:success:")) {
         return;
       }
 
-      console.log("[Admin] Received Auth Message manually.");
-      
-      // 2. LOOP PREVENTION: Check if we are already authenticated.
-      // If the token exists in LocalStorage, DO NOT reload again.
-      const existingUser = localStorage.getItem("netlify-cms-user");
-      if (existingUser) {
+      // 2. Loop Prevention: Check if valid token already exists
+      const existing = localStorage.getItem("decap-cms-user") || localStorage.getItem("netlify-cms-user");
+      if (existing) {
         try {
-          const userData = JSON.parse(existingUser);
-          if (userData.token) {
-            console.log("[Admin] ✅ Token already exists. Stopping reload loop.");
+          if (JSON.parse(existing).token) {
+            console.log("[Admin] ✅ Token exists. Loop stopped.");
             return; 
           }
-        } catch (e) {
-          // If JSON is invalid, proceed to overwrite it
-          console.warn("[Admin] Existing token corrupted, overwriting.");
-        }
+        } catch (e) {}
       }
-        
+
       // 3. Parse and Save
       try {
-         const jsonStr = event.data.replace("authorization:github:success:", "");
-         const data = JSON.parse(jsonStr);
-         
-         if (data.token) {
-           const userObj = JSON.stringify({ token: data.token, backendName: 'github' });
-           // Write to both keys to maximize compatibility
-           localStorage.setItem("netlify-cms-user", userObj);
-           localStorage.setItem("decap-cms-user", userObj);
-           
-           console.log("[Admin] 💾 Token saved manually. Reloading CMS...");
-           window.location.reload();
-         }
+        const jsonStr = event.data.replace("authorization:github:success:", "");
+        const data = JSON.parse(jsonStr);
+        
+        if (data.token) {
+          // Fusion: Include both provider and backendName for maximum compatibility
+          const userObj = JSON.stringify({ 
+            token: data.token, 
+            provider: 'github',
+            backendName: 'github' 
+          });
+          
+          localStorage.setItem("netlify-cms-user", userObj);
+          localStorage.setItem("decap-cms-user", userObj);
+          
+          console.log("[Admin] 💾 Token saved. Reloading...");
+          // Added small delay to ensure storage write and fixed syntax
+          setTimeout(() => window.location.reload(), 50);
+        }
       } catch(e) {
-         console.error("[Admin] Manual auth parse error", e);
+        console.error("[Admin] Auth parse error", e);
       }
     });
   </script>
