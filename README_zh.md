@@ -1,3 +1,4 @@
+
 # Lumina | AI 数字实验室
 
 > "未来的界面即无界面。它是人类意图与机器智能之间的无缝对话。"
@@ -6,6 +7,21 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)
+
+## ⚠️ 数据同步紧急说明 (Data Sync Critical Warning)
+
+**请务必在使用 Git 推送代码前阅读！**
+
+本项目使用了 **Decap CMS**，它会直接向 GitHub 仓库的 `public/data.json` 文件提交更改。
+
+1.  **问题**：如果你在本地开发时，`public/data.json` 是旧版本，当你推送代码（`git push`）时，本地的旧文件会**覆盖**掉 CMS 在远程仓库生成的最新内容。
+2.  **解决**：在开始本地开发或提交代码前，**必须**先拉取远程仓库的最新更改：
+
+```bash
+git pull origin main
+```
+
+---
 
 ## 🌌 项目概览
 

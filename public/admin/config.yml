@@ -16,7 +16,7 @@ collections:
       - name: "data"
         label: "Database (data.json)"
         file: "public/data.json"
-        description: "Manage all site content from this single file."
+        description: "⚠️ IMPORTANT: This file is the Source of Truth. Developers must 'git pull' before pushing to avoid overwriting changes made here."
         fields:
           # PROJECTS SECTION
           - label: "Projects"
