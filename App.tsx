@@ -86,9 +86,15 @@ const AppContent: React.FC<{
   });
 
   useEffect(() => {
-    fetch('./data.json')
+    // FIX: Use absolute path '/data.json' to ensure we fetch from public root, not relative path
+    fetch('/data.json')
       .then(res => {
         if (!res.ok) throw new Error("Failed to load external data");
+        // Check content type to avoid "Unexpected token <" error if 404/index.html is returned
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") === -1) {
+           throw new Error("data.json returned HTML instead of JSON");
+        }
         return res.json();
       })
       .then(data => {

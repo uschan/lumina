@@ -8,14 +8,33 @@
   <link href="config.yml" type="text/yaml" rel="cms-config-url">
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <!-- Use a specific version instead of ^3.0.0 to prevent 302 redirects and version conflicts -->
+  <script src="https://unpkg.com/decap-cms@3.1.2/dist/decap-cms.js"></script>
 
   <script>
-    // 检查 LocalStorage 是否有手动注入的 Token
-    const user = localStorage.getItem('decap-cms-user');
-    if (user) {
-      console.log("🚀 检测到本地已存在用户信息，准备初始化...");
-    }
+    // Manual Listener: If Decap CMS misses the message, we catch it and force a reload
+    window.addEventListener("message", (event) => {
+      if (typeof event.data === 'string' && event.data.startsWith("authorization:github:success:")) {
+        console.log("[Admin] Received Auth Message manually:", event.data);
+        
+        // Parse the token out just to be safe
+        try {
+           const jsonStr = event.data.replace("authorization:github:success:", "");
+           const data = JSON.parse(jsonStr);
+           
+           if (data.token) {
+             const userObj = JSON.stringify({ token: data.token, backendName: 'github' });
+             localStorage.setItem("netlify-cms-user", userObj);
+             localStorage.setItem("decap-cms-user", userObj);
+             console.log("[Admin] Manually saved token. Reloading...");
+             // Give CMS a split second to react, otherwise force reload to pick up the cookie/storage
+             setTimeout(() => window.location.reload(), 500);
+           }
+        } catch(e) {
+           console.error("Manual auth parse error", e);
+        }
+      }
+    });
   </script>
 </body>
 </html>

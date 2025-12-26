@@ -4,7 +4,6 @@ const app = express();
 const port = 3000;
 
 // Hardcoded Configuration based on your provided inputs
-// Ideally these should be process.env, but ensuring they are correct here for the fix.
 const CLIENT_ID = process.env.OAUTH_CLIENT_ID || 'Iv23li5ruvGgBnvl0J3c';
 const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || '4718d7dd8dfabc4d745539368039d495077c591b';
 
@@ -14,30 +13,16 @@ const TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
 // --- ROUTE HANDLERS ---
 
-/**
- * 1. Authorization Redirect
- * Decap CMS opens this link in a popup.
- * We redirect the user to GitHub to approve access.
- */
 const authHandler = (req, res) => {
-  // Use a random state string for security (optional but recommended)
   const state = Math.random().toString(36).substring(7);
-  
   const params = new URLSearchParams({
     client_id: CLIENT_ID,
-    scope: 'repo,user', // 'repo' is required for CMS to commit changes
+    scope: 'repo,user',
     state: state
   });
-
   res.redirect(`${AUTHORIZATION_URL}?${params.toString()}`);
 };
 
-/**
- * 2. Callback Handler
- * GitHub redirects back here with a ?code= parameter.
- * We exchange this code for an access token.
- * Then we postMessage the token back to the main window.
- */
 const callbackHandler = async (req, res) => {
   const { code } = req.query;
 
@@ -46,54 +31,75 @@ const callbackHandler = async (req, res) => {
   }
 
   try {
-    // Exchange Code for Token
     const response = await axios.post(TOKEN_URL, {
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
       code: code,
     }, {
-      headers: { 
-        Accept: 'application/json' // Force JSON response
-      },
+      headers: { Accept: 'application/json' },
     });
 
     const data = response.data;
     const accessToken = data.access_token;
 
     if (!accessToken) {
-      console.error('GitHub Response Error:', data);
       return res.status(500).send(`GitHub Login Failed: ${JSON.stringify(data)}`);
     }
 
-    // --- CRITICAL PART ---
-    // Construct the message exactly as Decap CMS expects it.
-    // Format: "authorization:provider:success:json_string_content"
+    // Prepare the payload strictly for Decap CMS
     const content = {
       token: accessToken,
       provider: 'github'
     };
     
-    // We send a script that executes immediately in the popup
-    // It finds the opener (main CMS window) and sends the message
+    // The message string Decap expects
+    const messageStr = "authorization:github:success:" + JSON.stringify(content);
+    
+    // The user object to store in LocalStorage (stringified JSON)
+    // Decap CMS looks for "netlify-cms-user" or "decap-cms-user" containing { token: ... }
+    const userStorageValue = JSON.stringify({
+      token: accessToken,
+      backendName: 'github' 
+    });
+
     const script = `
+      <!DOCTYPE html>
+      <html>
+      <body>
       <script>
         (function() {
-          function receiveMessage(e) {
-            console.log("Sending message to opener");
-            // Send the token to the main window
-            // window.opener is the window that opened this popup
-            window.opener.postMessage(
-              "authorization:github:success:${JSON.stringify(content)}",
-              window.location.origin // Ensure security by matching origin
-            );
+          const origin = window.location.origin;
+          
+          console.log("[Auth Popup] Authenticated successfully.");
+          
+          // 1. DIRECT WRITE (The "Nuclear" Option)
+          // Since popup and opener are same-domain, we can write directly to storage.
+          try {
+             // Write to both legacy and new keys to be 100% sure
+             localStorage.setItem("netlify-cms-user", '${userStorageValue}');
+             localStorage.setItem("decap-cms-user", '${userStorageValue}');
+             console.log("[Auth Popup] Token written to LocalStorage directly.");
+          } catch(e) {
+             console.error("[Auth Popup] LS Write failed:", e);
+          }
+
+          // 2. STANDARD POST MESSAGE
+          if (window.opener) {
+            console.log("[Auth Popup] Sending message to opener at: " + origin);
+            // We use 'origin' to ensure exact match, no trailing slashes
+            window.opener.postMessage('${messageStr}', origin);
             
-            // Close the popup after a brief moment
-            setTimeout(() => { window.close(); }, 50);
+            // Also send '*' just in case the origin check is failing due to http/https mismatch in dev
+            window.opener.postMessage('${messageStr}', '*');
           }
           
-          receiveMessage();
+          // 3. CLOSE
+          document.write("Authentication successful. Closing...");
+          setTimeout(() => { window.close(); }, 100);
         })();
       </script>
+      </body>
+      </html>
     `;
 
     res.send(script);
@@ -104,13 +110,8 @@ const callbackHandler = async (req, res) => {
   }
 };
 
-// --- ROUTING SETUP ---
-
-// We handle both root paths and /oauth/ prefixed paths to accommodate 
-// different Nginx proxy configurations.
 app.get('/auth', authHandler);
 app.get('/callback', callbackHandler);
-
 app.get('/oauth/auth', authHandler);
 app.get('/oauth/callback', callbackHandler);
 
