@@ -35,7 +35,8 @@ const handleCallback = async (req, res) => {
     const { access_token } = response.data;
 
     if (!access_token) {
-      throw new Error('No access_token found in GitHub response');
+      // Return simple error script to close popup
+      return res.send('<script>alert("Authentication failed: No token received."); window.close();</script>');
     }
 
     const content = {
@@ -43,62 +44,26 @@ const handleCallback = async (req, res) => {
       provider: 'github'
     };
 
-    // Specific format required by NetlifyCMS/DecapCMS
+    // Standard Decap CMS message format
     const message = "authorization:github:success:" + JSON.stringify(content);
 
-    // Simplified Response HTML
-    // We prioritize RELIABILITY. If postMessage fails, the user sees the token and can copy it.
+    // Minimal Script to communicate with Opener and Close
     const html = `
       <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <title>Login Successful</title>
-        <style>
-          body { background: #111; color: #eee; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; }
-          .card { border: 1px solid #333; padding: 20px; border-radius: 8px; max-width: 500px; width: 100%; }
-          h2 { color: #4ade80; margin-top: 0; }
-          p { color: #888; font-size: 12px; margin-bottom: 15px; }
-          .token-box { width: 100%; background: #000; color: #fff; border: 1px solid #444; padding: 10px; margin-bottom: 10px; font-family: monospace; border-radius: 4px; }
-          button { cursor: pointer; background: #eee; color: #000; border: none; padding: 8px 16px; font-weight: bold; border-radius: 4px; }
-          button:hover { background: #fff; }
-        </style>
-      </head>
+      <html>
       <body>
-        <div class="card">
-          <h2>✅ Access Granted</h2>
-          <p>We are attempting to log you in automatically...</p>
-          
-          <div id="manual-section">
-            <p>If this window doesn't close, copy the token below and paste it into the "Manual Token" field on the admin page.</p>
-            <input type="text" class="token-box" value="${access_token}" readonly onclick="this.select()">
-            <button onclick="copyAndClose()">Copy & Close</button>
-          </div>
-        </div>
-
         <script>
           const message = ${JSON.stringify(message)};
+          const origin = window.location.origin;
           
-          // 1. Attempt Auto-Handshake
-          try {
-            if (window.opener) {
-              window.opener.postMessage(message, "*");
-              // Optional: Close after a short delay if we think it worked, 
-              // but keeping it open is safer for debugging rate limits.
-              // setTimeout(() => window.close(), 2000); 
-            }
-          } catch (e) {
-            console.error("Auto-handshake failed", e);
-          }
-
-          // 2. Manual Fallback
-          function copyAndClose() {
-            const el = document.querySelector('.token-box');
-            el.select();
-            navigator.clipboard.writeText(el.value).then(() => {
-              alert('Token copied!');
-              // window.close(); // Optional: user might want to keep it
-            });
+          if (window.opener) {
+            // Post message to the opening window (the CMS)
+            window.opener.postMessage(message, "*");
+            
+            // Close this popup
+            window.close();
+          } else {
+            document.body.innerHTML = "Authentication successful, but unable to communicate with the main window. You may close this tab.";
           }
         </script>
       </body>
@@ -116,7 +81,6 @@ const handleCallback = async (req, res) => {
 // --- ROUTES ---
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
-// Support both path structures for flexibility
 app.get('/oauth/auth', handleAuth);
 app.get('/oauth/callback', handleCallback);
 
