@@ -5,7 +5,7 @@ import Navigation from './components/Navigation';
 import ErrorBoundary from './components/ErrorBoundary';
 import CommandMenu from './components/CommandMenu';
 import BackToTop from './components/BackToTop';
-import Starfield from './components/Starfield'; // Import Starfield
+import Starfield from './components/Starfield';
 import { TRANSLATIONS } from './constants';
 import { ContentService } from './services/content';
 import { Language, Project, Post, ToolItem } from './types';
@@ -21,7 +21,6 @@ const Insights = React.lazy(() => import('./pages/Insights'));
 const BlogPost = React.lazy(() => import('./pages/BlogPost'));
 const Tools = React.lazy(() => import('./pages/Tools'));
 
-// Scroll to top on route change component
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -30,7 +29,11 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Icon Mapping Helper for JSON data (since JSON can't store functions)
+// Helper: Safe access to array data
+const safeArray = <T,>(arr: any): T[] => {
+  return Array.isArray(arr) ? arr : [];
+};
+
 const getIconForTool = (name: string) => {
   const map: Record<string, any> = {
     'Gemini 3 Pro': Sparkles,
@@ -53,7 +56,6 @@ const getIconForTool = (name: string) => {
   return map[name] || Cpu;
 };
 
-// Loading Component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background relative z-10">
     <div className="flex flex-col items-center gap-4">
@@ -63,7 +65,6 @@ const PageLoader = () => (
   </div>
 );
 
-// Inner Content Component to access Router Context
 const AppContent: React.FC<{ 
   lang: Language; 
   theme: 'light' | 'dark'; 
@@ -72,9 +73,9 @@ const AppContent: React.FC<{
   t: any 
 }> = ({ lang, theme, toggleTheme, toggleLang, t }) => {
   const location = useLocation();
-  const isLanding = location.pathname === '/'; // Check if on Landing Page
+  const isLanding = location.pathname === '/';
 
-  // Data State - Initialize with ContentService (fallback), then fetch external JSON
+  // Initial State: Use fallback content service to prevent initial flash of empty state
   const [content, setContent] = useState<{
     projects: Project[];
     posts: Post[];
@@ -86,11 +87,10 @@ const AppContent: React.FC<{
   });
 
   useEffect(() => {
-    // FIX: Use absolute path '/data.json' to ensure we fetch from public root, not relative path
-    fetch('/data.json')
+    // Add timestamp to prevent caching: ?t=...
+    fetch(`/data.json?t=${new Date().getTime()}`)
       .then(res => {
         if (!res.ok) throw new Error("Failed to load external data");
-        // Check content type to avoid "Unexpected token <" error if 404/index.html is returned
         const contentType = res.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") === -1) {
            throw new Error("data.json returned HTML instead of JSON");
@@ -98,17 +98,14 @@ const AppContent: React.FC<{
         return res.json();
       })
       .then(data => {
-        // Robustness Check: If data.json exists but is empty or missing keys (e.g. freshly created by CMS),
-        // we default to empty arrays instead of undefined to prevent crashes in .filter() or .map().
-        
         if (!data) return;
 
-        const rawProjects = Array.isArray(data.projects) ? data.projects : [];
-        const rawPosts = Array.isArray(data.posts) ? data.posts : [];
-        const rawTools = Array.isArray(data.tools) ? data.tools : [];
+        // EXTREME DEFENSE: Ensure arrays exist even if JSON is partial
+        const rawProjects = safeArray<Project>(data.projects);
+        const rawPosts = safeArray<Post>(data.posts);
+        const rawTools = safeArray<any>(data.tools);
 
-        // Map icons back to tools since JSON only has names
-        const toolsWithIcons = rawTools.map((t: any) => ({
+        const toolsWithIcons = rawTools.map((t) => ({
           ...t,
           icon: getIconForTool(t.name)
         }));
@@ -120,17 +117,16 @@ const AppContent: React.FC<{
         });
       })
       .catch(err => {
-        console.warn("Using default content fallback.", err);
+        console.warn("Using default/fallback content due to fetch error:", err);
+        // We keep the initial ContentService data if fetch fails
       });
   }, []);
 
   const { projects, posts, tools } = content;
 
-  // Simulated Visitor Stats Logic
+  // Stats Logic
   const [stats, setStats] = useState({ total: 10234, today: 42 });
-
   useEffect(() => {
-    // Basic simulation of persistent stats using localStorage
     const storedTotal = localStorage.getItem('lumina_total_visits');
     const storedToday = localStorage.getItem('lumina_today_visits');
     const lastVisitDate = localStorage.getItem('lumina_last_visit_date');
@@ -140,27 +136,22 @@ const AppContent: React.FC<{
     let newToday = storedToday ? parseInt(storedToday) : 42;
 
     if (lastVisitDate !== todayStr) {
-      newToday = 12; // Reset for new day (simulated start count)
+      newToday = 12;
     } else {
-      // Simulate increment on refresh/new session logic (debounce could be added)
       if (!sessionStorage.getItem('visited_session')) {
          newToday += 1;
          newTotal += 1;
          sessionStorage.setItem('visited_session', 'true');
       }
     }
-
     localStorage.setItem('lumina_total_visits', newTotal.toString());
     localStorage.setItem('lumina_today_visits', newToday.toString());
     localStorage.setItem('lumina_last_visit_date', todayStr);
-
     setStats({ total: newTotal, today: newToday });
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-500 flex flex-col">
-      
-      {/* Global Background Layer */}
       {!isLanding && (
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
           {theme === 'dark' ? (
@@ -171,7 +162,6 @@ const AppContent: React.FC<{
         </div>
       )}
 
-      {/* Conditionally Render Navigation and Command Menu */}
       {!isLanding && (
         <>
           <CommandMenu 
@@ -193,17 +183,10 @@ const AppContent: React.FC<{
 
       <main className={`relative z-10 flex-grow ${isLanding ? 'h-screen' : ''}`}>
         <ErrorBoundary>
-          {/* Suspense must wrap AnimatePresence for lazy routes to work without error #525 */}
           <Suspense fallback={<PageLoader />}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
-                {/* Landing Page Route */}
-                <Route 
-                  path="/" 
-                  element={<Landing lang={lang} toggleLang={toggleLang} />} 
-                />
-                
-                {/* Main Laboratory Dashboard (Previously Home) */}
+                <Route path="/" element={<Landing lang={lang} toggleLang={toggleLang} />} />
                 <Route 
                   path="/lab" 
                   element={
@@ -216,26 +199,11 @@ const AppContent: React.FC<{
                     />
                   } 
                 />
-                <Route 
-                  path="/projects" 
-                  element={<Projects projects={projects} lang={lang} />} 
-                />
-                <Route 
-                  path="/projects/:id" 
-                  element={<ProjectDetail lang={lang} projects={projects} />} 
-                />
-                <Route 
-                  path="/insights" 
-                  element={<Insights posts={posts} lang={lang} />} 
-                />
-                <Route 
-                  path="/insights/:id" 
-                  element={<BlogPost lang={lang} posts={posts} />} 
-                />
-                <Route 
-                  path="/tools" 
-                  element={<Tools tools={tools} lang={lang} />} 
-                />
+                <Route path="/projects" element={<Projects projects={projects} lang={lang} />} />
+                <Route path="/projects/:id" element={<ProjectDetail lang={lang} projects={projects} />} />
+                <Route path="/insights" element={<Insights posts={posts} lang={lang} />} />
+                <Route path="/insights/:id" element={<BlogPost lang={lang} posts={posts} />} />
+                <Route path="/tools" element={<Tools tools={tools} lang={lang} />} />
               </Routes>
             </AnimatePresence>
           </Suspense>
@@ -247,14 +215,11 @@ const AppContent: React.FC<{
           <BackToTop />
           <footer className="relative z-10 py-4 border-t border-gray-200 dark:border-zinc-900 mt-4 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm transition-colors duration-500">
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 opacity-60 hover:opacity-100 transition-opacity">
-              
               <div className="flex flex-col md:flex-row items-center gap-4 text-sm">
                  <p>© {new Date().getFullYear()} Lumina. All rights reserved.</p>
                  <span className="hidden md:inline text-muted-foreground">•</span>
                  <p>Built with React, Tailwind & Gemini 3 Pro.</p>
               </div>
-
-              {/* Visitor Stats Section */}
               <div className="flex items-center gap-6 text-xs font-mono text-muted-foreground bg-secondary/30 px-4 py-2 rounded-full border border-border/50">
                  <div className="flex items-center gap-2" title="Total Visitors">
                     <Users size={12} className="text-indigo-500" />
@@ -275,18 +240,14 @@ const AppContent: React.FC<{
 };
 
 const App: React.FC = () => {
-  // Theme State
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return 'light';
   });
-
-  // Language State
   const [lang, setLang] = useState<Language>('en');
 
-  // Apply Theme Effect
   useEffect(() => {
     const root = window.document.documentElement;
     if (theme === 'dark') {
@@ -296,27 +257,15 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
-
-  const toggleLang = () => {
-    setLang(prev => prev === 'en' ? 'zh' : 'en');
-  };
-
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const toggleLang = () => setLang(prev => prev === 'en' ? 'zh' : 'en');
   const t = TRANSLATIONS[lang];
 
   return (
     <HelmetProvider>
       <HashRouter>
         <ScrollToTop />
-        <AppContent 
-          lang={lang}
-          theme={theme}
-          toggleTheme={toggleTheme}
-          toggleLang={toggleLang}
-          t={t}
-        />
+        <AppContent lang={lang} theme={theme} toggleTheme={toggleTheme} toggleLang={toggleLang} t={t} />
       </HashRouter>
     </HelmetProvider>
   );
