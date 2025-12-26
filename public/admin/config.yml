@@ -2,9 +2,9 @@ backend:
   name: github
   repo: uschan/lumina
   branch: main
-  # Base URL for the auth flow
+  # The root domain where the OAuth server is hosted
   base_url: https://gemini.wildsalt.me
-  # The path on your server that redirects to GitHub
+  # The path to the authorization endpoint (relative to base_url)
   auth_endpoint: oauth/auth
 
 media_folder: "public/images/uploads"

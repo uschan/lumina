@@ -4,67 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lumina Content Manager</title>
-  <script>
-    // 1. CONFIG FETCH PATCH
-    (function() {
-      const originalFetch = window.fetch;
-      window.fetch = async function(input, init) {
-        const url = typeof input === 'string' ? input : input.url;
-        if (url && url.includes('config.yml')) {
-          try {
-            const response = await originalFetch(input, init);
-            const body = await response.blob();
-            const newHeaders = new Headers(response.headers);
-            newHeaders.set('Content-Type', 'text/yaml');
-            return new Response(body, {
-              status: response.status,
-              statusText: response.statusText,
-              headers: newHeaders
-            });
-          } catch (err) {
-            return originalFetch(input, init);
-          }
-        }
-        return originalFetch(input, init);
-      };
-    })();
-
-    // 2. 🌉 THE LOCALSTORAGE BRIDGE 🌉
-    // This listens for the popup writing to localStorage.
-    // When it happens, we manually fire the "message" event internally.
-    window.addEventListener('storage', (event) => {
-      if (event.key === 'lumina_cms_auth' && event.newValue) {
-        console.log("[Lumina Auth] Bridge triggered via LocalStorage!");
-        
-        try {
-          // Parse the content written by the popup
-          // event.newValue is already JSON stringified content object
-          const contentStr = event.newValue; 
-          
-          // Decap CMS expects: authorization:github:success:{...}
-          const messageStr = "authorization:github:success:" + contentStr;
-
-          // Dispatch the event to window so Decap CMS's listener catches it
-          window.postMessage(messageStr, window.location.origin);
-          
-          // Clear it
-          localStorage.removeItem('lumina_cms_auth');
-        } catch (e) {
-          console.error("Bridge Error", e);
-        }
-      }
-    });
-    
-    // Debug logger
-    window.addEventListener("message", (e) => {
-       if (typeof e.data === 'string' && e.data.startsWith('authorization:github:success')) {
-         console.log("✅ CMS Received Token Message");
-       }
-    });
-  </script>
 </head>
 <body>
-  <!-- Decap CMS will render its own UI here. -->
+  <!-- Include the script that builds the page and powers Decap CMS -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>

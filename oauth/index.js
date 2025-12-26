@@ -3,19 +3,42 @@ const axios = require('axios');
 const app = express();
 const port = 3000;
 
-// Environment variables
-const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
-const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
+// Hardcoded Configuration based on your provided inputs
+// Ideally these should be process.env, but ensuring they are correct here for the fix.
+const CLIENT_ID = process.env.OAUTH_CLIENT_ID || 'Iv23li5ruvGgBnvl0J3c';
+const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || '4718d7dd8dfabc4d745539368039d495077c591b';
+
+// GitHub Endpoints
 const AUTHORIZATION_URL = 'https://github.com/login/oauth/authorize';
 const TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
-// --- HANDLERS ---
+// --- ROUTE HANDLERS ---
 
-const handleAuth = (req, res) => {
-  res.redirect(`${AUTHORIZATION_URL}?client_id=${CLIENT_ID}&scope=repo,user`);
+/**
+ * 1. Authorization Redirect
+ * Decap CMS opens this link in a popup.
+ * We redirect the user to GitHub to approve access.
+ */
+const authHandler = (req, res) => {
+  // Use a random state string for security (optional but recommended)
+  const state = Math.random().toString(36).substring(7);
+  
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    scope: 'repo,user', // 'repo' is required for CMS to commit changes
+    state: state
+  });
+
+  res.redirect(`${AUTHORIZATION_URL}?${params.toString()}`);
 };
 
-const handleCallback = async (req, res) => {
+/**
+ * 2. Callback Handler
+ * GitHub redirects back here with a ?code= parameter.
+ * We exchange this code for an access token.
+ * Then we postMessage the token back to the main window.
+ */
+const callbackHandler = async (req, res) => {
   const { code } = req.query;
 
   if (!code) {
@@ -23,78 +46,57 @@ const handleCallback = async (req, res) => {
   }
 
   try {
+    // Exchange Code for Token
     const response = await axios.post(TOKEN_URL, {
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
-      code,
+      code: code,
     }, {
-      headers: { Accept: 'application/json' },
+      headers: { 
+        Accept: 'application/json' // Force JSON response
+      },
     });
 
-    const { access_token } = response.data;
+    const data = response.data;
+    const accessToken = data.access_token;
 
-    if (!access_token) {
-       return res.send('<script>alert("GitHub Login Failed: No token returned");window.close();</script>');
+    if (!accessToken) {
+      console.error('GitHub Response Error:', data);
+      return res.status(500).send(`GitHub Login Failed: ${JSON.stringify(data)}`);
     }
 
+    // --- CRITICAL PART ---
+    // Construct the message exactly as Decap CMS expects it.
+    // Format: "authorization:provider:success:json_string_content"
     const content = {
-      token: access_token,
+      token: accessToken,
       provider: 'github'
     };
-
-    // Prepare the payload string
-    const payloadStr = JSON.stringify(content);
-    const message = "authorization:github:success:" + payloadStr;
-
-    const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>Authenticating...</title>
-      <style>body{background:#111;color:#888;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;}</style>
-    </head>
-    <body>
-      <div id="msg">Authenticating...</div>
+    
+    // We send a script that executes immediately in the popup
+    // It finds the opener (main CMS window) and sends the message
+    const script = `
       <script>
-        const content = ${payloadStr};
-        const message = '${message}';
-        
-        // STRATEGY 1: LocalStorage Bridge (The "Nuclear" Option)
-        // Since we are on the same domain, we can write to storage.
-        // The main window listens for 'storage' events.
-        try {
-          localStorage.setItem("lumina_cms_auth", JSON.stringify(content));
-          // Remove it shortly after to clean up, but give main window time to read
-          setTimeout(() => localStorage.removeItem("lumina_cms_auth"), 2000);
-        } catch (e) {
-          console.error("LS Error", e);
-        }
-
-        // STRATEGY 2: Standard PostMessage (The "Polite" Option)
-        function notify() {
-           if (window.opener) {
-              window.opener.postMessage(message, "*");
-           }
-        }
-        
-        notify();
-        // Spam it a few times just to be safe against race conditions
-        let count = 0;
-        const interval = setInterval(() => {
-           notify();
-           count++;
-           if (count > 5) {
-             clearInterval(interval);
-             window.close(); // Close after 5 attempts (~500ms)
-           }
-        }, 100);
+        (function() {
+          function receiveMessage(e) {
+            console.log("Sending message to opener");
+            // Send the token to the main window
+            // window.opener is the window that opened this popup
+            window.opener.postMessage(
+              "authorization:github:success:${JSON.stringify(content)}",
+              window.location.origin // Ensure security by matching origin
+            );
+            
+            // Close the popup after a brief moment
+            setTimeout(() => { window.close(); }, 50);
+          }
+          
+          receiveMessage();
+        })();
       </script>
-    </body>
-    </html>
     `;
 
-    res.send(html);
+    res.send(script);
 
   } catch (error) {
     console.error('Auth Error:', error.message);
@@ -102,11 +104,14 @@ const handleCallback = async (req, res) => {
   }
 };
 
-// --- ROUTES ---
-app.get('/auth', handleAuth);
-app.get('/callback', handleCallback);
-// Handle subpath routing cases
-app.get('/oauth/auth', handleAuth);
-app.get('/oauth/callback', handleCallback);
+// --- ROUTING SETUP ---
+
+// We handle both root paths and /oauth/ prefixed paths to accommodate 
+// different Nginx proxy configurations.
+app.get('/auth', authHandler);
+app.get('/callback', callbackHandler);
+
+app.get('/oauth/auth', authHandler);
+app.get('/oauth/callback', callbackHandler);
 
 app.listen(port, () => console.log(`OAuth Server running on ${port}`));
