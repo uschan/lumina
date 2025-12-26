@@ -12,7 +12,6 @@ const TOKEN_URL = 'https://github.com/login/oauth/access_token';
 // --- HANDLERS ---
 
 const handleAuth = (req, res) => {
-  // Redirect to GitHub
   res.redirect(`${AUTHORIZATION_URL}?client_id=${CLIENT_ID}&scope=repo,user`);
 };
 
@@ -35,77 +34,64 @@ const handleCallback = async (req, res) => {
     const { access_token } = response.data;
 
     if (!access_token) {
-      return res.send('<html><body><h3>Authentication failed</h3><p>No token received from GitHub.</p></body></html>');
+       return res.send('<script>alert("GitHub Login Failed: No token returned");window.close();</script>');
     }
 
-    // Standard Decap CMS message format
-    // content must be an object with 'token' and 'provider'
     const content = {
       token: access_token,
       provider: 'github'
     };
 
-    // The message string Decap CMS listens for regex: /^authorization:github:success:(.+)$/
-    const message = "authorization:github:success:" + JSON.stringify(content);
+    // Prepare the payload string
+    const payloadStr = JSON.stringify(content);
+    const message = "authorization:github:success:" + payloadStr;
 
-    // Robust HTML Response
     const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Login Successful</title>
-        <style>
-          body { font-family: -apple-system, system-ui, sans-serif; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-          .card { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); max-width: 400px; width: 90%; }
-          h2 { color: #2ea043; margin-top: 0; }
-          p { color: #8b949e; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
-          code { background: #21262d; padding: 4px 8px; border-radius: 4px; color: #58a6ff; word-break: break-all; font-family: monospace; font-size: 12px; display: block; margin: 10px 0; }
-          button { background: #238636; color: white; border: 1px solid rgba(240,246,252,0.1); padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-          button:hover { background: #2ea043; }
-          .status { font-size: 12px; margin-top: 15px; color: #8b949e; }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <h2>✅ Access Granted</h2>
-          <p>You have successfully authenticated with GitHub.</p>
-          
-          <div style="text-align: left; background: #000; padding: 10px; border-radius: 4px; margin-bottom: 20px;">
-             <span style="font-size: 10px; color: #666; display: block; margin-bottom: 4px;">DEBUG INFO (TOKEN):</span>
-             <code>${access_token}</code>
-          </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Authenticating...</title>
+      <style>body{background:#111;color:#888;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;}</style>
+    </head>
+    <body>
+      <div id="msg">Authenticating...</div>
+      <script>
+        const content = ${payloadStr};
+        const message = '${message}';
+        
+        // STRATEGY 1: LocalStorage Bridge (The "Nuclear" Option)
+        // Since we are on the same domain, we can write to storage.
+        // The main window listens for 'storage' events.
+        try {
+          localStorage.setItem("lumina_cms_auth", JSON.stringify(content));
+          // Remove it shortly after to clean up, but give main window time to read
+          setTimeout(() => localStorage.removeItem("lumina_cms_auth"), 2000);
+        } catch (e) {
+          console.error("LS Error", e);
+        }
 
-          <p>We are broadcasting this token to the main window...</p>
-          <button onclick="window.close()">Close Window</button>
-          
-          <div class="status" id="status">Status: Initializing...</div>
-        </div>
-
-        <script>
-          const message = ${JSON.stringify(message)};
-          const statusEl = document.getElementById('status');
-          
-          function send() {
-            if (window.opener) {
+        // STRATEGY 2: Standard PostMessage (The "Polite" Option)
+        function notify() {
+           if (window.opener) {
               window.opener.postMessage(message, "*");
-              statusEl.innerText = "Status: Broadcasting token to CMS... (" + new Date().toLocaleTimeString() + ")";
-              console.log("Sent message:", message);
-            } else {
-              statusEl.innerText = "Status: ⚠️ Main window lost. Please copy the token above manually if needed.";
-              statusEl.style.color = "#f85149";
-            }
-          }
-
-          // Send immediately
-          send();
-
-          // Keep sending every 500ms in case the CMS window wasn't ready
-          setInterval(send, 1000);
-        </script>
-      </body>
-      </html>
+           }
+        }
+        
+        notify();
+        // Spam it a few times just to be safe against race conditions
+        let count = 0;
+        const interval = setInterval(() => {
+           notify();
+           count++;
+           if (count > 5) {
+             clearInterval(interval);
+             window.close(); // Close after 5 attempts (~500ms)
+           }
+        }, 100);
+      </script>
+    </body>
+    </html>
     `;
 
     res.send(html);
@@ -119,6 +105,7 @@ const handleCallback = async (req, res) => {
 // --- ROUTES ---
 app.get('/auth', handleAuth);
 app.get('/callback', handleCallback);
+// Handle subpath routing cases
 app.get('/oauth/auth', handleAuth);
 app.get('/oauth/callback', handleCallback);
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lumina Content Manager</title>
   <script>
-    // 🛠️ CONFIG FETCH PATCH 🛠️
+    // 1. CONFIG FETCH PATCH
     (function() {
       const originalFetch = window.fetch;
       window.fetch = async function(input, init) {
@@ -29,13 +29,37 @@
       };
     })();
 
-    // 🐛 DEBUG LISTENER 🐛
-    // This allows us to see if the popup is actually talking to us.
-    window.addEventListener("message", (event) => {
-      // Filter out webpack/react noise
-      if (typeof event.data === 'string' && event.data.startsWith('authorization:github:success')) {
-        console.log("%c [Lumina Auth] Token Received! ", "background: #22c55e; color: #fff; font-size: 12px; padding: 4px;", event.data);
+    // 2. 🌉 THE LOCALSTORAGE BRIDGE 🌉
+    // This listens for the popup writing to localStorage.
+    // When it happens, we manually fire the "message" event internally.
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'lumina_cms_auth' && event.newValue) {
+        console.log("[Lumina Auth] Bridge triggered via LocalStorage!");
+        
+        try {
+          // Parse the content written by the popup
+          // event.newValue is already JSON stringified content object
+          const contentStr = event.newValue; 
+          
+          // Decap CMS expects: authorization:github:success:{...}
+          const messageStr = "authorization:github:success:" + contentStr;
+
+          // Dispatch the event to window so Decap CMS's listener catches it
+          window.postMessage(messageStr, window.location.origin);
+          
+          // Clear it
+          localStorage.removeItem('lumina_cms_auth');
+        } catch (e) {
+          console.error("Bridge Error", e);
+        }
       }
+    });
+    
+    // Debug logger
+    window.addEventListener("message", (e) => {
+       if (typeof e.data === 'string' && e.data.startsWith('authorization:github:success')) {
+         console.log("✅ CMS Received Token Message");
+       }
     });
   </script>
 </head>
