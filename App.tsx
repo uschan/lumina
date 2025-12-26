@@ -10,8 +10,8 @@ import { TRANSLATIONS } from './constants';
 import { ContentService } from './services/content';
 import { Language, Project, Post, ToolItem } from './types';
 import { AnimatePresence } from 'framer-motion';
-// Import ALL icons used in ContentService mapping here
-import { BarChart, Users, Sparkles, Bot, BrainCircuit, Image, Code2, MousePointer2, TerminalSquare, Container, Atom, FileCode2, Wind, Box, PenTool, Smartphone, Database, Cloud, Cpu } from 'lucide-react';
+// FIX: Use stable icon names. Replaced TerminalSquare->Terminal, FileCode2->FileCode to prevent build errors.
+import { BarChart, Users, Sparkles, Bot, BrainCircuit, Image, Code2, MousePointer, Terminal, Container, Atom, FileCode, Wind, Box, PenTool, Smartphone, Database, Cloud, Cpu } from 'lucide-react';
 
 // Lazy Load Pages
 const Landing = React.lazy(() => import('./pages/Landing'));
@@ -30,7 +30,7 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Helper: Safe access to array data (Standard function to avoid TSX generic ambiguity)
+// Helper: Safe access to array data
 function safeArray<T>(arr: any): T[] {
   return Array.isArray(arr) ? arr : [];
 }
@@ -43,11 +43,11 @@ const getIconForTool = (name: string) => {
     'Claude': BrainCircuit,
     'Midjourney': Image,
     'VS Code': Code2,
-    'Cursor': MousePointer2,
-    'PuTTY': TerminalSquare,
+    'Cursor': MousePointer, // Changed from MousePointer2
+    'PuTTY': Terminal,      // Changed from TerminalSquare
     'Docker': Container,
     'React 19': Atom,
-    'TypeScript': FileCode2,
+    'TypeScript': FileCode, // Changed from FileCode2
     'Tailwind CSS': Wind,
     'Next.js 15': Box,
     'Figma': PenTool,
@@ -83,11 +83,9 @@ const AppContent: React.FC<{
     posts: Post[];
     tools: ToolItem[];
   }>(() => {
-    // We strictly use a callback for useState to ensure this heavy logic runs only once
     return {
       projects: ContentService.getProjects(),
       posts: ContentService.getPosts(),
-      // CRITICAL: Map icons for default content here, as ContentService is now pure data
       tools: ContentService.getTools().map(t => ({
         ...t,
         icon: getIconForTool(t.name)
@@ -109,8 +107,6 @@ const AppContent: React.FC<{
       .then(data => {
         if (!data) return;
 
-        // SAFE GUARD: If data.json exists but arrays are empty (e.g. initial CMS state),
-        // fallback to ContentService to ensure the site isn't blank.
         const fetchedProjects = safeArray<Project>(data.projects);
         const fetchedPosts = safeArray<Post>(data.posts);
         const fetchedTools = safeArray<any>(data.tools);
@@ -121,7 +117,7 @@ const AppContent: React.FC<{
         // Determine tool source: fetched or fallback
         const sourceTools = fetchedTools.length > 0 ? fetchedTools : ContentService.getTools();
         
-        // ALWAYS Re-map icons for tools (whether from JSON or fallback)
+        // ALWAYS Re-map icons for tools
         const toolsWithIcons = sourceTools.map((tool: any) => ({
           ...tool,
           icon: getIconForTool(tool.name)
@@ -135,7 +131,6 @@ const AppContent: React.FC<{
       })
       .catch(err => {
         console.warn("Using default/fallback content due to fetch error:", err);
-        // We keep the initial ContentService data if fetch fails, which is already correctly mapped in useState
       });
   }, []);
 
