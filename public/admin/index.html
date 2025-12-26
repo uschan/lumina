@@ -6,7 +6,6 @@
   <title>Lumina Content Manager</title>
   <script>
     // 🛠️ CONFIG FETCH PATCH 🛠️
-    // Ensures config.yml is read as YAML to prevent MIME type errors on some servers
     (function() {
       const originalFetch = window.fetch;
       window.fetch = async function(input, init) {
@@ -29,10 +28,19 @@
         return originalFetch(input, init);
       };
     })();
+
+    // 🐛 DEBUG LISTENER 🐛
+    // This allows us to see if the popup is actually talking to us.
+    window.addEventListener("message", (event) => {
+      // Filter out webpack/react noise
+      if (typeof event.data === 'string' && event.data.startsWith('authorization:github:success')) {
+        console.log("%c [Lumina Auth] Token Received! ", "background: #22c55e; color: #fff; font-size: 12px; padding: 4px;", event.data);
+      }
+    });
   </script>
 </head>
 <body>
-  <!-- Decap CMS will render its own UI here. Do not add custom HTML overlays. -->
+  <!-- Decap CMS will render its own UI here. -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
