@@ -240,7 +240,7 @@ export const ContentService = {
         return PROJECTS;
       }
 
-      // Fallback: If DB is empty, return local mock data
+      // CRITICAL FALLBACK: If DB returns empty array (no data seeded yet), use local mock data
       if (!data || data.length === 0) {
         return PROJECTS;
       }
@@ -269,7 +269,7 @@ export const ContentService = {
         return POSTS;
       }
 
-      // Fallback: If DB is empty, return local mock data
+      // CRITICAL FALLBACK
       if (!data || data.length === 0) {
         return POSTS;
       }
@@ -299,7 +299,7 @@ export const ContentService = {
         return TOOLS;
       }
 
-      // Fallback: If DB is empty, return local mock data
+      // CRITICAL FALLBACK
       if (!data || data.length === 0) {
         return TOOLS;
       }

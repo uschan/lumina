@@ -33,10 +33,12 @@ const Nexus: React.FC = () => {
         // --- SEED PROJECTS ---
         addLog(`Uploading ${PROJECTS.length} projects...`);
         
-        // Explicitly map fields to match schema exactly.
-        // We create a new object to ensure no hidden properties (like 'challenge') are passed.
+        // STRICT SANITIZATION:
+        // We recreate the object field-by-field. 
+        // This strips out 'challenge', 'solution', or any other property that might exist in the runtime object
+        // but does not exist in the database schema.
         const projectsPayload = PROJECTS.map((p) => {
-             const cleanProject = {
+             return {
                 slug: p.slug,
                 title: p.title,
                 description: p.description,
@@ -44,15 +46,14 @@ const Nexus: React.FC = () => {
                 palette: p.palette || [],
                 tags: p.tags,
                 image: p.image,
-                links: p.links,
+                links: p.links, // Supabase handles Object -> JSONB conversion
                 featured: p.featured || false,
                 publish_date: p.publishDate
             };
-            return cleanProject;
         });
 
-        // Debug: Log the first key set to ensure 'challenge' is gone
-        console.log('Seeding Projects Payload (First Item Keys):', Object.keys(projectsPayload[0]));
+        // Debug Log
+        console.log('Sanitized Payload (Keys):', Object.keys(projectsPayload[0]));
         
         const { error: projError } = await supabase.from('projects').insert(projectsPayload);
         if (projError) throw projError;
@@ -96,7 +97,7 @@ const Nexus: React.FC = () => {
 
     } catch (e: any) {
         addLog(`Seeding Error: ${e.message}`);
-        console.error("Full seeding error:", e);
+        console.error("Full seeding error object:", e);
         setStatus('error');
     }
   };
@@ -109,7 +110,7 @@ const Nexus: React.FC = () => {
                 <ShieldCheck size={24} />
                 <h1 className="text-xl font-bold tracking-widest">NEXUS CONTROL</h1>
             </div>
-            <div className="text-xs opacity-50">V.0.2.0-BETA</div>
+            <div className="text-xs opacity-50">V.0.2.1-FIX</div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
