@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, Suspense } from 'react';
-import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient } from '@tanstack/query-core';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
@@ -258,10 +259,10 @@ const App: React.FC = () => {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <HashRouter>
+        <BrowserRouter>
           <ScrollToTop />
           <AppContent lang={lang} theme={theme} toggleTheme={toggleTheme} toggleLang={toggleLang} t={t} />
-        </HashRouter>
+        </BrowserRouter>
       </QueryClientProvider>
     </HelmetProvider>
   );

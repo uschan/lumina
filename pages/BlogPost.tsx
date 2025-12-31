@@ -110,12 +110,31 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
       alert(lang === 'en' ? 'Link copied!' : '链接已复制！');
   };
 
+  // Smooth Scroll Handler
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+      e.preventDefault();
+      const element = document.getElementById(id);
+      if (element) {
+          // Adjust offset for fixed header if needed
+          const headerOffset = 100;
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+          window.scrollTo({
+              top: offsetPosition,
+              behavior: "smooth"
+          });
+          
+          // Optional: Update URL hash without forcing a route reload
+          window.history.pushState(null, '', `#${id}`);
+      }
+  };
+
   if (!post) {
     return <div className="pt-32 text-center">Post not found</div>;
   }
 
   // Parse TOC from Markdown Content
-  // We use regex to find lines starting with ##, then clean them to match the ID generation logic
   const toc = post.content?.match(/^##\s+(.*$)/gm)?.map(heading => {
      // Remove '## ' and any bold/italic markers from the text for display
      const rawTitle = heading.replace(/^##\s+/, '');
@@ -136,7 +155,8 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
             {children}
             {/* Hover Anchor Link */}
             <a 
-                href={`#${id}`} 
+                href={`#${id}`}
+                onClick={(e) => scrollToSection(e, id)}
                 className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500/50 hover:text-indigo-500 p-1 hidden lg:block"
                 aria-label={`Link to ${text}`}
             >
@@ -243,6 +263,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                         <a 
                           key={i} 
                           href={`#${item.id}`} 
+                          onClick={(e) => scrollToSection(e, item.id)}
                           className="pl-4 py-1.5 text-sm text-muted-foreground hover:text-indigo-500 hover:border-l-2 hover:border-indigo-500 border-l-2 border-transparent -ml-[1px] transition-colors block truncate"
                           title={item.title}
                         >
