@@ -6,7 +6,6 @@ import { motion, useScroll, useSpring } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import SupportWidget from '../components/SupportWidget';
 import CodeBlock from '../components/CodeBlock';
-import Comments from '../components/Comments';
 
 interface BlogPostProps {
   lang: Language;
@@ -202,10 +201,6 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                          </button>
                     </div>
                 </div>
-
-                {/* Comment Section (Giscus) */}
-                <Comments />
-
              </motion.div>
           </div>
 

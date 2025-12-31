@@ -30,11 +30,6 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Helper: Safe access to array data
-function safeArray<T>(arr: any): T[] {
-  return Array.isArray(arr) ? arr : [];
-}
-
 // Icon Mapping Helper
 const getIconForTool = (name: string) => {
   const map: Record<string, any> = {
@@ -78,7 +73,7 @@ const AppContent: React.FC<{
   const isLanding = location.pathname === '/';
 
   // Initial State: Use fallback content service BUT map icons immediately
-  const [content, setContent] = useState<{
+  const [content] = useState<{
     projects: Project[];
     posts: Post[];
     tools: ToolItem[];
@@ -92,47 +87,6 @@ const AppContent: React.FC<{
       }))
     };
   });
-
-  useEffect(() => {
-    // Add timestamp to prevent caching: ?t=...
-    fetch(`/data.json?t=${new Date().getTime()}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to load external data");
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") === -1) {
-           throw new Error("data.json returned HTML instead of JSON");
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (!data) return;
-
-        const fetchedProjects = safeArray<Project>(data.projects);
-        const fetchedPosts = safeArray<Post>(data.posts);
-        const fetchedTools = safeArray<any>(data.tools);
-
-        const validProjects = fetchedProjects.length > 0 ? fetchedProjects : ContentService.getProjects();
-        const validPosts = fetchedPosts.length > 0 ? fetchedPosts : ContentService.getPosts();
-        
-        // Determine tool source: fetched or fallback
-        const sourceTools = fetchedTools.length > 0 ? fetchedTools : ContentService.getTools();
-        
-        // ALWAYS Re-map icons for tools
-        const toolsWithIcons = sourceTools.map((tool: any) => ({
-          ...tool,
-          icon: getIconForTool(tool.name)
-        }));
-        
-        setContent({
-          projects: validProjects,
-          posts: validPosts,
-          tools: toolsWithIcons
-        });
-      })
-      .catch(err => {
-        console.warn("Using default/fallback content due to fetch error:", err);
-      });
-  }, []);
 
   const { projects, posts, tools } = content;
 

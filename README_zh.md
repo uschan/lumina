@@ -1,4 +1,3 @@
-
 # Lumina | AI 数字实验室
 
 > "未来的界面即无界面。它是人类意图与机器智能之间的无缝对话。"
@@ -7,21 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)
-
-## ⚠️ 数据同步紧急说明 (Data Sync Critical Warning)
-
-**请务必在使用 Git 推送代码前阅读！**
-
-本项目使用了 **Decap CMS**，它会直接向 GitHub 仓库的 `public/data.json` 文件提交更改。
-
-1.  **问题**：如果你在本地开发时，`public/data.json` 是旧版本，当你推送代码（`git push`）时，本地的旧文件会**覆盖**掉 CMS 在远程仓库生成的最新内容。
-2.  **解决**：在开始本地开发或提交代码前，**必须**先拉取远程仓库的最新更改：
-
-```bash
-git pull origin main
-```
-
----
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.0-38B2AC?logo=tailwind-css&logoColor=white)
 
 ## 🌌 项目概览
 
@@ -41,7 +26,7 @@ git pull origin main
     *   **命令面板 (`Cmd+K`)**: 模拟 IDE/操作系统的键盘驱动导航系统，提升极客体验。
     *   **智能交互**: 博客文章支持“复制为 Markdown”功能，专门优化用于与 LLM 分享上下文。
     *   **可视化效果**: 模拟 AI 分析的打字机效果，以及环形阅读进度指示器。
-    *   **互动与反馈**: 集成 Giscus (GitHub Discussions) 评论系统，点赞互动及滚动触发动画。
+    *   **互动与反馈**: 滚动触发动画与高灵敏度的微交互。
 
 ## 🛠️ 技术栈 (前端)
 
@@ -52,6 +37,26 @@ git pull origin main
 *   **图标**: Lucide React
 *   **路由**: React Router v6
 *   **工具库**: React Helmet Async (SEO), React Markdown, React Syntax Highlighter
+
+## 📁 项目结构
+
+项目采用扁平化的根目录结构，便于维护。
+
+```
+lumina/
+├── public/              # 静态资源 (Manifest, 图标)
+├── components/          # 可复用 UI 组件 (BentoGrid, CommandMenu 等)
+├── pages/               # 路由页面 (Home, Projects, Insights...)
+├── services/            # 静态内容服务 (数据源)
+├── types/               # TypeScript 类型定义
+├── App.tsx              # 主入口 & 路由逻辑
+├── index.tsx            # 入口点
+├── index.html           # HTML 模板
+├── constants.ts         # 配置与翻译字典
+├── package.json
+├── tailwind.config.js
+└── tsconfig.json
+```
 
 ## 🚀 快速开始
 
@@ -76,79 +81,11 @@ git pull origin main
     npm run build
     ```
 
-## ☁️ VPS 部署 (OAuth 服务)
-
-为了在您自己的 VPS 上启用 CMS 登录，您需要运行 OAuth 服务。
-
-1.  **安装 Docker & Docker Compose**:
-    ```bash
-    sudo apt update
-    sudo apt install docker.io docker-compose -y
-    ```
-
-2.  **配置与运行**:
-    确保您的 `docker-compose.yml` 填入了正确的 `CLIENT_ID` 和 `CLIENT_SECRET`。
-    ```bash
-    docker-compose up -d
-    ```
-
-## 🔮 未来路线图：后端与 AI 融合
-
-当前版本主要作为“视图 (View)”层。为了将 Lumina 转变为功能完备的“AI 实验室”，建议采用以下全栈架构方案：
-
-### 1. "混合" 架构 (推荐)
-*目标：SEO 性能 + 真实的 AI 能力*
-
-*   **元框架**: 从 Vite/CRA 迁移至 **Next.js (App Router)**。
-    *   *理由*: 服务端渲染 (SSR) 对博客 SEO 至关重要。React 服务端组件 (RSC) 允许直接从服务器流式传输 AI 响应，而无需暴露 API 密钥。
-*   **数据库**: **PostgreSQL** (通过 Supabase 或 Neon)。
-    *   *理由*: 为文章/项目提供强大的关系型数据支持。易于集成 **pgvector** 以存储嵌入向量 (实现向量搜索功能)。
-*   **CMS**: **Sanity.io** or **Strapi (Headless)**。
-    *   *理由*: 仅通过 Markdown 文件管理内容 (当前状态) 难以扩展。Headless CMS 能提供丰富的编辑体验。
-
-### 2. AI 引擎 (后端)
-*目标：真正的 GenAI 特性 (例如："与我的简历对话"、"AI 项目代码分析")*
-
-*   **语言**: **Python (FastAPI)**。
-    *   *理由*: Python 是 AI 领域的原生语言，生态丰富。
-*   **编排框架**: **LangChain** 或 **LlamaIndex**。
-*   **模型提供商**: **Google Gemini API** (通过 `@google/genai` SDK)。
-    *   *集成方式*: 前端发送提示词 -> Next.js API 路由 -> FastAPI 微服务 -> Gemini -> 流式返回给客户端。
-
-### 3. 建议架构图
-
-```mermaid
-graph TD
-    Client[React Client] <-->|Next.js Server Actions| Server[Next.js Server]
-    Server <-->|Queries| CMS[Sanity.io / Headless CMS]
-    Server <-->|SQL/Vector| DB[(PostgreSQL + pgvector)]
-    Server <-->|API| AI_Service[Python AI Microservice]
-    AI_Service <-->|Inference| LLM[Google Gemini API]
-```
-
-## 📁 项目结构
-
-```
-lumina/
-├── public/              # 静态资源 (Manifest, 图标)
-├── src/
-│   ├── components/      # 可复用 UI 组件 (BentoGrid, CommandMenu 等)
-│   ├── pages/           # 路由页面 (Home, Projects, Insights...)
-│   ├── services/        # 数据获取 & Mock 服务
-│   ├── types/           # TypeScript 类型定义
-│   ├── constants.ts     # 配置与翻译字典
-│   ├── index.css        # Tailwind 指令 & 全局样式
-│   └── App.tsx          # 主入口 & 路由逻辑
-├── package.json
-├── tailwind.config.js
-└── tsconfig.json
-```
-
 ## 🎨 定制指南
 
-*   **内容管理**: 编辑 `src/services/content.ts` 以更新项目、文章和工具数据。
-*   **多语言翻译**: 更新 `src/constants.ts` 中的字典。
-*   **评论系统**: 在 `src/components/Comments.tsx` 中配置您的 `repoId` 和 `categoryId` 以启用 Giscus。
+*   **内容管理**: 直接编辑 `services/content.ts` 以更新项目、文章和工具数据（TypeScript 类型安全）。
+*   **多语言翻译**: 更新 `constants.ts` 中的字典。
+*   **样式**: 全局样式位于 `index.html` 中的 `style` 标签内或通过 Tailwind 类名控制。
 
 ---
 

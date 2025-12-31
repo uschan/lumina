@@ -11,7 +11,7 @@
 
 **Lumina** is a highly personalized personal brand website and digital laboratory designed for AI Engineers and Creative Developers. Unlike traditional portfolios, Lumina is built as a Progressive Web App (PWA) with a focus on "intent-based" interactions, immersive micro-animations, and a futuristic "Laboratory" aesthetic.
 
-It currently serves as a high-fidelity frontend prototype, simulating AI interactions and demonstrating advanced UI/UX patterns suited for the AI era.
+It serves as a high-fidelity frontend prototype, simulating AI interactions and demonstrating advanced UI/UX patterns suited for the AI era.
 
 ### ✨ Key Features
 
@@ -37,6 +37,26 @@ It currently serves as a high-fidelity frontend prototype, simulating AI interac
 *   **Routing**: React Router v6
 *   **Utilities**: React Helmet Async (SEO), React Markdown, React Syntax Highlighter
 
+## 📁 Project Structure
+
+The project follows a flat, root-level structure for simplicity and ease of access.
+
+```
+lumina/
+├── public/              # Static assets (Manifest, Icons)
+├── components/          # Reusable UI components (BentoGrid, CommandMenu, etc.)
+├── pages/               # Route views (Home, Projects, Insights...)
+├── services/            # Static Content Service (Data Source)
+├── types/               # TypeScript definitions
+├── App.tsx              # Main Application Component & Routing
+├── index.tsx            # Entry point
+├── index.html           # HTML Template
+├── constants.ts         # Configuration & Translations
+├── package.json
+├── tailwind.config.js
+└── tsconfig.json
+```
+
 ## 🚀 Getting Started
 
 1.  **Clone the repository**
@@ -60,79 +80,11 @@ It currently serves as a high-fidelity frontend prototype, simulating AI interac
     npm run build
     ```
 
-## ☁️ VPS Deployment (OAuth Server)
-
-To enable the CMS login on your own VPS, you need to run the OAuth server.
-
-1.  **Install Docker & Docker Compose**:
-    ```bash
-    sudo apt update
-    sudo apt install docker.io docker-compose -y
-    ```
-
-2.  **Configure & Run**:
-    Ensure your `docker-compose.yml` has the correct `CLIENT_ID` and `CLIENT_SECRET`.
-    ```bash
-    docker-compose up -d
-    ```
-
-## 🔮 Future Roadmap: Backend & AI Integration
-
-The current version acts as a "View" layer. To transform Lumina into a fully functional "AI Laboratory," the following full-stack architecture is recommended.
-
-### 1. The "Hybrid" Stack (Recommended)
-*Goal: SEO performance + Real AI Capabilities*
-
-*   **Meta-Framework**: Migrate from Vite/CRA to **Next.js (App Router)**.
-    *   *Why*: Server-Side Rendering (SSR) is crucial for blog SEO. React Server Components (RSC) allow streaming AI responses directly from the server without exposing API keys.
-*   **Database**: **PostgreSQL** (via Supabase or Neon).
-    *   *Why*: Robust relational data for posts/projects. Easy integration with **pgvector** for storing embeddings (Vector Search functionality).
-*   **CMS**: **Sanity.io** or **Strapi (Headless)**.
-    *   *Why*: Managing content via Markdown files (current state) scales poorly. A Headless CMS allows for a rich editing experience.
-
-### 2. The AI Engine (Backend)
-*Goal: True GenAI features (e.g., "Chat with my Resume", "AI Project Analysis")*
-
-*   **Language**: **Python (FastAPI)**.
-    *   *Why*: Python is the native language of AI.
-*   **Orchestration**: **LangChain** or **LlamaIndex**.
-*   **Model Provider**: **Google Gemini API** (via `@google/genai` SDK).
-    *   *Integration*: The frontend sends a prompt -> Next.js API Route -> FastAPI Service -> Gemini -> Stream back to Client.
-
-### 3. Proposed Architecture Diagram
-
-```mermaid
-graph TD
-    Client[React Client] <-->|Next.js Server Actions| Server[Next.js Server]
-    Server <-->|Queries| CMS[Sanity.io / Headless CMS]
-    Server <-->|SQL/Vector| DB[(PostgreSQL + pgvector)]
-    Server <-->|API| AI_Service[Python AI Microservice]
-    AI_Service <-->|Inference| LLM[Google Gemini API]
-```
-
-## 📁 Project Structure
-
-```
-lumina/
-├── public/              # Static assets (Manifest, Icons)
-├── src/
-│   ├── components/      # Reusable UI components (BentoGrid, CommandMenu, etc.)
-│   ├── pages/           # Route views (Home, Projects, Insights...)
-│   ├── services/        # Data fetching & Mock services
-│   ├── types/           # TypeScript definitions
-│   ├── constants.ts     # Configuration & Translations
-│   ├── index.css        # Tailwind directives & Global styles
-│   └── App.tsx          # Main entry & Routing logic
-├── package.json
-├── tailwind.config.js
-└── tsconfig.json
-```
-
 ## 🎨 Customization Guide
 
-*   **Content**: Edit `src/services/content.ts` to update projects, posts, and tools data.
-*   **Translations**: Update dictionaries in `src/constants.ts`.
-*   **Comments**: Configure your `repoId` and `categoryId` in `src/components/Comments.tsx` to enable Giscus.
+*   **Content**: Edit `services/content.ts` to update projects, posts, and tools data directly in TypeScript.
+*   **Translations**: Update dictionaries in `constants.ts`.
+*   **Styling**: Global styles are located in the `style` tag within `index.html` or via Tailwind classes.
 
 ---
 
