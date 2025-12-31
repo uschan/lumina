@@ -180,7 +180,11 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
                 return (
                   <Wrapper key={tool.name} {...wrapperProps}>
                       <div className="group h-full flex flex-col gap-3 p-4 rounded-2xl border border-border/40 bg-card/20 backdrop-blur-sm hover:border-indigo-500/30 transition-colors relative">
-                        {tool.url && <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500"><ExternalLink size={10}/></div>}
+                        {tool.url && (
+                            <div className="absolute bottom-3 right-3 text-indigo-500 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
+                                <ExternalLink size={16}/>
+                            </div>
+                        )}
                         <div className="flex items-center justify-between">
                             <div className="text-xs font-mono text-muted-foreground">{tool.category}</div>
                             <Icon size={16} className="text-indigo-500 opacity-80" />
