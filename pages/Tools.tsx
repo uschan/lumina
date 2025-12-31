@@ -2,7 +2,7 @@
 import React from 'react';
 import { ToolItem, Language } from '../types';
 import { motion } from 'framer-motion';
-import { Cpu, ExternalLink } from 'lucide-react';
+import { Cpu, Link } from 'lucide-react';
 
 interface ToolsProps {
   tools: ToolItem[];
@@ -51,8 +51,8 @@ const Tools: React.FC<ToolsProps> = ({ tools, lang }) => {
                   <Wrapper {...wrapperProps}>
                     <div className="group h-full p-6 rounded-2xl border border-border/60 bg-card/40 backdrop-blur-sm hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all duration-300 relative">
                         {tool.url && (
-                            <div className="absolute bottom-5 right-5 text-muted-foreground group-hover:text-indigo-500 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                                <ExternalLink size={24} />
+                            <div className="absolute bottom-5 right-5 text-muted-foreground group-hover:text-Amber-500 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                <Link size={20} />
                             </div>
                         )}
                         <div className="flex items-center justify-between mb-4">
