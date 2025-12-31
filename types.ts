@@ -59,4 +59,5 @@ export interface ToolItem {
   icon?: any;          // React Component (Runtime)
   iconName?: string;   // String name for DB storage (e.g. 'Cpu')
   description: string;
+  url?: string;        // Affiliate or official link
 }

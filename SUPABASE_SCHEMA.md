@@ -1,3 +1,4 @@
+
 # Supabase Database Schema
 
 Copy and paste the code below into the **SQL Editor** in your Supabase dashboard to create the necessary tables and security policies.
@@ -84,6 +85,7 @@ create table if not exists public.tools (
   category text,
   description text,
   icon_name text, -- We store the Lucide icon name as a string, e.g., 'Cpu'
+  url text, -- Optional: Affiliate link or official website
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 

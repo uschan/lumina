@@ -345,6 +345,7 @@ const Nexus: React.FC = () => {
                                     <Input label="Category" value={editingItem?.category} onChange={v => setEditingItem({...editingItem, category: v})} />
                                 </div>
                                 <Input label="Icon Name (Lucide Icon String)" value={editingItem?.iconName} onChange={v => setEditingItem({...editingItem, iconName: v})} />
+                                <Input label="URL (Affiliate/Link)" value={editingItem?.url} onChange={v => setEditingItem({...editingItem, url: v})} />
                                 <Input label="Description" value={editingItem?.description} onChange={v => setEditingItem({...editingItem, description: v})} />
                             </>
                         )}

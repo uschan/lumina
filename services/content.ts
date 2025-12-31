@@ -84,7 +84,8 @@ export const ToolService = {
         name: t.name,
         category: t.category,
         description: t.description,
-        iconName: t.icon_name
+        iconName: t.icon_name,
+        url: t.url
     }));
   },
 
@@ -94,7 +95,8 @@ export const ToolService = {
           name: tool.name,
           category: tool.category,
           description: tool.description,
-          icon_name: tool.iconName || 'Cpu' // Default icon if missing
+          icon_name: tool.iconName || 'Cpu', // Default icon if missing
+          url: tool.url
       };
       const { error } = await supabase.from('tools').upsert(payload);
       if (error) throw error;
