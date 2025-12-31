@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Language, Post } from '../types';
 import { 
   ArrowLeft, Clock, Calendar, List, Share2, FileText, Check, 
-  X, Twitter, Facebook, Linkedin, Link2, Globe, Hash
+  X, Twitter, Facebook, Linkedin, Link2, Globe, Hash, ChevronLeft, ChevronRight, ZoomIn
 } from 'lucide-react';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -32,11 +32,11 @@ const generateId = (text: string) => {
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')           // Replace spaces with -
-    .replace(/[^\w\u4e00-\u9fa5\-]+/g, '') // Keep English, Numbers, Chinese, Hyphens. Strip others.
-    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-    .replace(/^-+/, '')             // Trim - from start
-    .replace(/-+$/, '');            // Trim - from end
+    .replace(/\s+/g, '-')           
+    .replace(/[^\w\u4e00-\u9fa5\-]+/g, '') 
+    .replace(/\-\-+/g, '-')         
+    .replace(/^-+/, '')             
+    .replace(/-+$/, '');            
 };
 
 // Weibo Icon Component
@@ -55,9 +55,21 @@ const WeiboIcon = ({ size = 24, className = "" }: { size?: number, className?: s
 
 const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
   const { slug } = useParams<{ slug: string }>();
-  const post = posts.find(p => p.slug === slug);
+  const navigate = useNavigate();
+  
+  // Find current post index
+  const currentIndex = posts.findIndex(p => p.slug === slug);
+  const post = posts[currentIndex];
+  
+  // Calculate Previous and Next posts (Assuming posts are sorted newest first)
+  // Next Post in timeline (Newer) -> Index - 1
+  // Previous Post in timeline (Older) -> Index + 1
+  const newerPost = currentIndex > 0 ? posts[currentIndex - 1] : null;
+  const olderPost = currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null;
+
   const [copied, setCopied] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   
   // Scroll Progress Logic
   const { scrollYProgress } = useScroll();
@@ -115,7 +127,6 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
       e.preventDefault();
       const element = document.getElementById(id);
       if (element) {
-          // Adjust offset for fixed header if needed
           const headerOffset = 100;
           const elementPosition = element.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -124,36 +135,32 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
               top: offsetPosition,
               behavior: "smooth"
           });
-          
-          // Optional: Update URL hash without forcing a route reload
           window.history.pushState(null, '', `#${id}`);
       }
   };
+
+  // Memoize TOC
+  const toc = useMemo(() => {
+    if (!post?.content) return [];
+    return post.content.match(/^##\s+(.*$)/gm)?.map(heading => {
+      const rawTitle = heading.replace(/^##\s+/, '');
+      const cleanTitle = rawTitle.replace(/[*_`]/g, ''); 
+      const id = generateId(cleanTitle);
+      return { title: cleanTitle, id };
+    }) || [];
+  }, [post]);
 
   if (!post) {
     return <div className="pt-32 text-center">Post not found</div>;
   }
 
-  // Parse TOC from Markdown Content
-  const toc = post.content?.match(/^##\s+(.*$)/gm)?.map(heading => {
-     // Remove '## ' and any bold/italic markers from the text for display
-     const rawTitle = heading.replace(/^##\s+/, '');
-     const cleanTitle = rawTitle.replace(/[*_`]/g, ''); 
-     // Generate ID consistent with CustomH2
-     const id = generateId(cleanTitle);
-     return { title: cleanTitle, id };
-  }) || [];
-
-  // Custom H2 component for Markdown to add IDs
+  // Custom Components for Markdown
   const CustomH2 = ({ children }: any) => {
-    // Extract pure text from children (which might be mixed with <code>, <strong> etc)
     const text = extractText(children);
     const id = generateId(text);
-    
     return (
         <h2 id={id} className="scroll-mt-32 relative group">
             {children}
-            {/* Hover Anchor Link */}
             <a 
                 href={`#${id}`}
                 onClick={(e) => scrollToSection(e, id)}
@@ -166,6 +173,22 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
     );
   };
 
+  const CustomImage = ({ src, alt }: any) => {
+      return (
+          <div 
+             className="relative my-8 rounded-xl overflow-hidden cursor-zoom-in group border border-border/50 bg-card/50"
+             onClick={() => setLightboxImage(src)}
+          >
+              <img src={src} alt={alt} className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.01]" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <div className="bg-black/50 backdrop-blur-sm p-2 rounded-full text-white">
+                      <ZoomIn size={20} />
+                  </div>
+              </div>
+          </div>
+      );
+  };
+
   return (
     <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6 relative">
        {/* Reading Progress Bar */}
@@ -174,14 +197,12 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
           style={{ scaleX }}
         />
 
-       {/* Background is now global in App.tsx */}
-
        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12">
           
           {/* Main Content */}
           <div className="flex-1 min-w-0">
-             <Link to="/insights" className="inline-flex items-center text-sm text-muted-foreground hover:text-indigo-500 mb-8 transition-colors">
-                <ArrowLeft size={16} className="mr-2" />
+             <Link to="/insights" className="inline-flex items-center text-sm text-muted-foreground hover:text-indigo-500 mb-8 transition-colors group">
+                <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
                 {lang === 'en' ? 'Back to Lab Log' : '返回日志'}
              </Link>
 
@@ -189,36 +210,51 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                initial={{ opacity: 0, y: 10 }}
                animate={{ opacity: 1, y: 0 }}
              >
-                <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground mb-6 uppercase tracking-wider">
-                  <span className="flex items-center gap-1"><Calendar size={12} /> {post.date}</span>
-                  <span className="flex items-center gap-1"><Clock size={12} /> {post.readTime}</span>
-                  <span className="px-2 py-0.5 rounded border border-indigo-500/30 text-indigo-500">{post.category}</span>
+                {/* Header Section with subtle glow */}
+                <div className="relative mb-12">
+                    <div className="absolute -inset-10 bg-indigo-500/5 blur-3xl rounded-full pointer-events-none" />
+                    
+                    <div className="relative">
+                        <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground mb-6 uppercase tracking-wider">
+                            <span className="flex items-center gap-1"><Calendar size={12} /> {post.date}</span>
+                            <div className="w-1 h-1 rounded-full bg-border" />
+                            <span className="flex items-center gap-1"><Clock size={12} /> {post.readTime}</span>
+                            <div className="w-1 h-1 rounded-full bg-border" />
+                            <span className="px-2 py-0.5 rounded border border-indigo-500/30 text-indigo-500 bg-indigo-500/5">{post.category}</span>
+                        </div>
+
+                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-8 leading-[1.1]">
+                        {post.title}
+                        </h1>
+
+                        {/* Tags Display */}
+                        {post.tags && post.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {post.tags.map(tag => (
+                                    <span key={tag} className="px-2.5 py-1 rounded-md bg-secondary/50 border border-border/50 text-xs font-mono text-muted-foreground hover:border-indigo-500/30 hover:text-indigo-500 transition-colors cursor-default">#{tag}</span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-8 leading-tight">
-                  {post.title}
-                </h1>
-
-                {/* Tags Display */}
-                {post.tags && post.tags.length > 0 && (
-                   <div className="flex gap-2 mb-8">
-                     {post.tags.map(tag => (
-                        <span key={tag} className="px-2 py-1 rounded bg-secondary text-xs font-mono text-muted-foreground">#{tag}</span>
-                     ))}
-                   </div>
-                )}
-
-                {/* Main Content Area with Border & Styles */}
-                <div className="border border-border/50 rounded-3xl p-6 sm:p-10 bg-card/10 backdrop-blur-sm shadow-sm">
+                {/* Main Content Area */}
+                <div className="border border-border/50 rounded-3xl p-6 sm:p-10 bg-card/10 backdrop-blur-sm shadow-sm relative overflow-hidden">
+                    {/* Corner accents */}
+                    <div className="absolute top-0 left-0 w-20 h-20 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none" />
+                    
                     <div className="prose prose-zinc dark:prose-invert prose-lg max-w-none 
                       prose-headings:font-light prose-headings:tracking-tight 
                       prose-p:leading-relaxed prose-p:text-muted-foreground
+                      prose-a:text-indigo-500 prose-a:no-underline hover:prose-a:underline
                       prose-pre:bg-transparent prose-pre:border-none prose-pre:p-0
+                      prose-img:rounded-xl prose-img:shadow-md
                       ">
                        <ReactMarkdown
                           components={{
                             code: CodeBlock,
-                            h2: CustomH2
+                            h2: CustomH2,
+                            img: CustomImage
                           }}
                        >
                          {post.content || ''}
@@ -226,64 +262,87 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                     </div>
                 </div>
 
-                {/* Footer Actions: Copy & Share */}
-                <div className="mt-12 flex flex-col sm:flex-row items-center justify-end gap-6 border-t border-border/30 pt-8">
+                {/* Footer Actions */}
+                <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-border/30 pt-8">
+                    <p className="text-sm text-muted-foreground italic">
+                        {lang === 'en' ? 'Thanks for reading.' : '感谢阅读。'}
+                    </p>
                     <div className="flex gap-3">
                          <button 
                            onClick={handleCopyContent}
-                           className="flex items-center gap-2 px-6 py-2 rounded-full bg-secondary/50 hover:bg-secondary text-foreground font-medium text-sm transition-colors border border-border/50"
+                           className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary/50 hover:bg-secondary text-foreground font-medium text-xs sm:text-sm transition-colors border border-border/50"
                          >
                             {copied ? <Check size={16} /> : <FileText size={16} />}
-                            {copied ? (lang === 'en' ? 'Copied MD' : '已复制 MD') : (lang === 'en' ? 'Copy Markdown' : '复制 Markdown')}
+                            {copied ? (lang === 'en' ? 'Copied' : '已复制') : (lang === 'en' ? 'Copy MD' : '复制 MD')}
                          </button>
                          <button 
                            onClick={() => setIsShareModalOpen(true)}
-                           className="flex items-center gap-2 px-6 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition-colors shadow-lg shadow-indigo-500/20"
+                           className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs sm:text-sm transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40"
                          >
                             <Share2 size={16} />
                             {lang === 'en' ? 'Share' : '分享'}
                          </button>
                     </div>
                 </div>
+
+                {/* Post Navigation */}
+                <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {olderPost ? (
+                        <Link to={`/insights/${olderPost.slug}`} className="group p-6 rounded-2xl border border-border/50 bg-card/20 hover:bg-card/40 hover:border-indigo-500/30 transition-all text-left">
+                            <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground mb-2">
+                                <ChevronLeft size={12} />
+                                {lang === 'en' ? 'Previous' : '上一篇'}
+                            </div>
+                            <div className="font-medium text-foreground group-hover:text-indigo-500 transition-colors line-clamp-1">
+                                {olderPost.title}
+                            </div>
+                        </Link>
+                    ) : <div />}
+
+                    {newerPost ? (
+                        <Link to={`/insights/${newerPost.slug}`} className="group p-6 rounded-2xl border border-border/50 bg-card/20 hover:bg-card/40 hover:border-indigo-500/30 transition-all text-right">
+                            <div className="flex items-center justify-end gap-2 text-xs font-mono text-muted-foreground mb-2">
+                                {lang === 'en' ? 'Next' : '下一篇'}
+                                <ChevronRight size={12} />
+                            </div>
+                            <div className="font-medium text-foreground group-hover:text-indigo-500 transition-colors line-clamp-1">
+                                {newerPost.title}
+                            </div>
+                        </Link>
+                    ) : <div />}
+                </div>
+
              </motion.div>
           </div>
 
-          {/* Sidebar / Static TOC */}
+          {/* Sidebar */}
           <aside className="lg:w-64 shrink-0 hidden lg:block">
              <div className="sticky top-32">
-                <div className="flex items-center gap-2 mb-6 text-sm font-bold text-foreground uppercase tracking-widest border-b border-border/50 pb-2">
-                   <List size={16} />
-                   Table of Contents
+                <div className="flex items-center gap-2 mb-6 text-xs font-bold text-foreground uppercase tracking-widest border-b border-border/50 pb-3">
+                   <List size={14} />
+                   {lang === 'en' ? 'Outline' : '大纲'}
                 </div>
                 
-                {/* Static Outline TOC */}
-                <nav className="relative flex flex-col gap-1 mb-12 pl-2 border-l border-border/50">
+                <nav className="relative flex flex-col gap-1 mb-12 pl-3 border-l border-border/50">
                    {toc.length > 0 ? toc.map((item, i) => {
                       return (
                         <a 
                           key={i} 
                           href={`#${item.id}`} 
                           onClick={(e) => scrollToSection(e, item.id)}
-                          className="pl-4 py-1.5 text-sm text-muted-foreground hover:text-indigo-500 hover:border-l-2 hover:border-indigo-500 border-l-2 border-transparent -ml-[1px] transition-colors block truncate"
+                          className="pl-4 py-1.5 text-sm text-muted-foreground hover:text-indigo-500 hover:translate-x-1 transition-all block truncate relative"
                           title={item.title}
                         >
                           {item.title}
                         </a>
                       );
                    }) : (
-                     <span className="text-sm text-muted-foreground italic pl-4">No sections</span>
+                     <span className="text-sm text-muted-foreground italic pl-4">...</span>
                    )}
                 </nav>
                 
                 <div className="mb-12">
                    <SupportWidget />
-                </div>
-
-                <div className="p-4 rounded-xl bg-card border border-border">
-                   <h4 className="font-bold text-sm mb-2">Subscribe</h4>
-                   <p className="text-xs text-muted-foreground mb-4">Get the latest lab experiments directly to your inbox.</p>
-                   <input type="email" placeholder="Email address" className="w-full bg-background border border-border rounded px-3 py-2 text-sm mb-2 focus:ring-1 focus:ring-indigo-500 outline-none" />
-                   <button className="w-full bg-foreground text-background text-xs font-bold py-2 rounded hover:bg-foreground/80 transition-colors">JOIN</button>
                 </div>
              </div>
           </aside>
@@ -293,21 +352,19 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
        <AnimatePresence>
          {isShareModalOpen && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-               {/* Backdrop */}
                <motion.div 
                  initial={{ opacity: 0 }}
                  animate={{ opacity: 1 }}
                  exit={{ opacity: 0 }}
                  onClick={() => setIsShareModalOpen(false)}
-                 className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+                 className="absolute inset-0 bg-background/80 backdrop-blur-sm"
                />
                
-               {/* Modal Content */}
                <motion.div 
                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
                  animate={{ opacity: 1, scale: 1, y: 0 }}
                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                 className="relative w-full max-w-sm bg-card border border-border rounded-2xl shadow-2xl overflow-hidden p-6"
+                 className="relative w-full max-w-sm bg-card border border-border rounded-2xl shadow-2xl overflow-hidden p-6 z-10"
                >
                   <div className="flex justify-between items-center mb-6">
                      <h3 className="text-lg font-bold text-foreground">Share Article</h3>
@@ -328,12 +385,11 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                            <div className={`w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center transition-colors group-hover:bg-secondary ${link.color}`}>
                               {link.icon}
                            </div>
-                           <span className="text-xs text-muted-foreground">{link.name}</span>
+                           <span className="text-[10px] text-muted-foreground">{link.name}</span>
                         </a>
                      ))}
                   </div>
 
-                  {/* Copy Link Input */}
                   <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/30 border border-border">
                      <Globe size={16} className="text-muted-foreground ml-2" />
                      <input 
@@ -349,10 +405,34 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                         <Link2 size={16} />
                      </button>
                   </div>
-
                </motion.div>
             </div>
          )}
+       </AnimatePresence>
+
+       {/* Lightbox Modal */}
+       <AnimatePresence>
+           {lightboxImage && (
+               <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setLightboxImage(null)}
+                  className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-zoom-out"
+               >
+                   <motion.img 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      src={lightboxImage} 
+                      alt="Zoomed" 
+                      className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                   />
+                   <button className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">
+                       <X size={32} />
+                   </button>
+               </motion.div>
+           )}
        </AnimatePresence>
     </div>
   );
