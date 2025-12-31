@@ -1,24 +1,26 @@
 import React, { useState } from 'react';
 import { supabase, checkConnection } from '../services/supabase';
 import { PROJECTS, POSTS, TOOLS } from '../services/content';
-import { Database, Upload, Check, AlertTriangle, ShieldCheck, Server } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Database, Upload, ShieldCheck, Server, Lock } from 'lucide-react';
 
 const Nexus: React.FC = () => {
   const [status, setStatus] = useState<string>('idle');
   const [log, setLog] = useState<string[]>([]);
 
-  const addLog = (msg: string) => setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  const addLog = (msg: string, type: 'info' | 'error' | 'success' = 'info') => {
+      const prefix = type === 'error' ? '[ERR]' : type === 'success' ? '[OK]' : '[INFO]';
+      setLog(prev => [...prev, `${prefix} [${new Date().toLocaleTimeString()}] ${msg}`]);
+  };
 
   const handleTestConnection = async () => {
     setStatus('checking');
     addLog('Initiating handshake with Supabase...');
     const result = await checkConnection();
     if (result.success) {
-        addLog(`Connection Verified. Access to projects table confirmed.`);
+        addLog(`Connection Verified. Access to projects table confirmed.`, 'success');
         setStatus('connected');
     } else {
-        addLog(`Connection Failed: ${(result.error as any)?.message}`);
+        addLog(`Connection Failed: ${(result.error as any)?.message}`, 'error');
         setStatus('error');
     }
   };
@@ -33,10 +35,6 @@ const Nexus: React.FC = () => {
         // --- SEED PROJECTS ---
         addLog(`Uploading ${PROJECTS.length} projects...`);
         
-        // STRICT SANITIZATION:
-        // We recreate the object field-by-field. 
-        // This strips out 'challenge', 'solution', or any other property that might exist in the runtime object
-        // but does not exist in the database schema.
         const projectsPayload = PROJECTS.map((p) => {
              return {
                 slug: p.slug,
@@ -46,18 +44,15 @@ const Nexus: React.FC = () => {
                 palette: p.palette || [],
                 tags: p.tags,
                 image: p.image,
-                links: p.links, // Supabase handles Object -> JSONB conversion
+                links: p.links,
                 featured: p.featured || false,
                 publish_date: p.publishDate
             };
         });
-
-        // Debug Log
-        console.log('Sanitized Payload (Keys):', Object.keys(projectsPayload[0]));
         
         const { error: projError } = await supabase.from('projects').insert(projectsPayload);
         if (projError) throw projError;
-        addLog('Projects uploaded successfully.');
+        addLog('Projects uploaded successfully.', 'success');
 
         // --- SEED POSTS ---
         addLog(`Uploading ${POSTS.length} posts...`);
@@ -78,7 +73,7 @@ const Nexus: React.FC = () => {
 
         const { error: postError } = await supabase.from('posts').insert(postsPayload);
         if (postError) throw postError;
-        addLog('Posts uploaded successfully.');
+        addLog('Posts uploaded successfully.', 'success');
 
         // --- SEED TOOLS ---
         addLog(`Uploading ${TOOLS.length} tools...`);
@@ -90,14 +85,23 @@ const Nexus: React.FC = () => {
         }));
         const { error: toolError } = await supabase.from('tools').insert(toolsPayload);
         if (toolError) throw toolError;
-        addLog('Tools uploaded successfully.');
+        addLog('Tools uploaded successfully.', 'success');
 
         setStatus('success');
-        addLog('Database seeding complete. System ready.');
+        addLog('Database seeding complete. System ready.', 'success');
 
     } catch (e: any) {
-        addLog(`Seeding Error: ${e.message}`);
         console.error("Full seeding error object:", e);
+        
+        // Specific handling for RLS errors (42501)
+        if (e.code === '42501') {
+             addLog(`PERMISSION DENIED (42501): Row Level Security Policy Violation.`, 'error');
+             addLog(`HINT: You must enable INSERT policies in Supabase SQL Editor.`, 'error');
+             addLog(`Run: create policy "Enable full access" on public.projects for all using (true) with check (true);`, 'error');
+        } else {
+             addLog(`Seeding Error: ${e.message}`, 'error');
+        }
+        
         setStatus('error');
     }
   };
@@ -110,7 +114,7 @@ const Nexus: React.FC = () => {
                 <ShieldCheck size={24} />
                 <h1 className="text-xl font-bold tracking-widest">NEXUS CONTROL</h1>
             </div>
-            <div className="text-xs opacity-50">V.0.2.1-FIX</div>
+            <div className="text-xs opacity-50">V.0.2.2-RLS</div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -146,7 +150,8 @@ const Nexus: React.FC = () => {
                         : 'border-gray-800 text-gray-700 cursor-not-allowed'
                     }`}
                 >
-                    <Upload size={14} /> Seed Database
+                    {status === 'error' ? <Lock size={14} className="text-red-500" /> : <Upload size={14} />} 
+                    {status === 'error' ? 'Check Policies' : 'Seed Database'}
                 </button>
             </div>
         </div>
@@ -155,7 +160,7 @@ const Nexus: React.FC = () => {
         <div className="bg-black border border-green-500/20 rounded p-4 h-64 overflow-y-auto font-mono text-xs">
             {log.length === 0 && <span className="opacity-30">Waiting for commands...</span>}
             {log.map((l, i) => (
-                <div key={i} className="mb-1 border-b border-green-900/20 pb-1 last:border-0">
+                <div key={i} className={`mb-1 border-b border-green-900/20 pb-1 last:border-0 ${l.includes('[ERR]') ? 'text-red-400' : l.includes('[OK]') ? 'text-green-400' : 'text-green-600'}`}>
                     <span className="opacity-50 mr-2">{`>`}</span>
                     {l}
                 </div>

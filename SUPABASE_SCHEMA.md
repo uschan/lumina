@@ -9,7 +9,7 @@ create extension if not exists "uuid-ossp";
 -- ==========================================
 -- TABLE: PROJECTS
 -- ==========================================
-create table public.projects (
+create table if not exists public.projects (
   id uuid default gen_random_uuid() primary key,
   slug text not null unique,
   title text not null,
@@ -27,15 +27,24 @@ create table public.projects (
 -- Enable Row Level Security (RLS)
 alter table public.projects enable row level security;
 
--- Policy: Allow public read access
+-- Policy: Allow public read access (SELECT)
 create policy "Public projects are viewable by everyone." 
   on public.projects for select 
   using (true);
 
+-- Policy: Allow public write access (INSERT/UPDATE/DELETE) for Seeding
+-- CAUTION: In a real production app with Auth, restrict this to authenticated users only.
+-- For this portfolio demo, we allow it to enable the 'Seed Database' button to work.
+create policy "Enable full access for seeding" 
+  on public.projects for all 
+  using (true) 
+  with check (true);
+
+
 -- ==========================================
 -- TABLE: POSTS (Insights)
 -- ==========================================
-create table public.posts (
+create table if not exists public.posts (
   id uuid default gen_random_uuid() primary key,
   slug text not null unique,
   title text not null,
@@ -59,10 +68,17 @@ create policy "Public posts are viewable by everyone."
   on public.posts for select 
   using (true);
 
+-- Policy: Allow public write access for Seeding
+create policy "Enable full access for seeding" 
+  on public.posts for all 
+  using (true) 
+  with check (true);
+
+
 -- ==========================================
 -- TABLE: TOOLS
 -- ==========================================
-create table public.tools (
+create table if not exists public.tools (
   id uuid default gen_random_uuid() primary key,
   name text not null,
   category text,
@@ -79,9 +95,17 @@ create policy "Public tools are viewable by everyone."
   on public.tools for select 
   using (true);
 
+-- Policy: Allow public write access for Seeding
+create policy "Enable full access for seeding" 
+  on public.tools for all 
+  using (true) 
+  with check (true);
+
+
 -- ==========================================
 -- OPTIONAL: Storage Buckets (If you plan to upload images)
 -- ==========================================
 -- insert into storage.buckets (id, name, public) values ('images', 'images', true);
 -- create policy "Public Access" on storage.objects for select using ( bucket_id = 'images' );
+-- create policy "Public Upload" on storage.objects for insert with check ( bucket_id = 'images' );
 ```
