@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, Project } from '../types';
 import { ArrowLeft, Github, ExternalLink, Palette, Cpu, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import SupportWidget from '../components/SupportWidget';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import SEO from '../components/SEO';
@@ -103,9 +105,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                  initial={{ opacity: 0, y: 20 }}
                  whileInView={{ opacity: 1, y: 0 }}
                  viewport={{ once: true }}
-                 className="p-8 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm prose prose-zinc dark:prose-invert max-w-none"
+                 className="p-8 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm prose prose-zinc dark:prose-invert max-w-none prose-img:rounded-xl prose-img:shadow-md"
               >
                 <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
                     components={{
                         code: CodeBlock,
                         h2: CustomH2

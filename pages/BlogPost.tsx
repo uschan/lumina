@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import SupportWidget from '../components/SupportWidget';
 import CodeBlock from '../components/CodeBlock';
 
@@ -61,9 +62,6 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
   const currentIndex = posts.findIndex(p => p.slug === slug);
   const post = posts[currentIndex];
   
-  // Calculate Previous and Next posts (Assuming posts are sorted newest first)
-  // Next Post in timeline (Newer) -> Index - 1
-  // Previous Post in timeline (Older) -> Index + 1
   const newerPost = currentIndex > 0 ? posts[currentIndex - 1] : null;
   const olderPost = currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null;
 
@@ -223,7 +221,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                             <span className="px-2 py-0.5 rounded border border-indigo-500/30 text-indigo-500 bg-indigo-500/5">{post.category}</span>
                         </div>
 
-                        <h1 className="text-4xl md:text-4xl font-bold tracking-tight text-foreground mb-8 leading-[1.1]">
+                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-8 leading-[1.1]">
                         {post.title}
                         </h1>
 
@@ -249,8 +247,12 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                       prose-a:text-indigo-500 prose-a:no-underline hover:prose-a:underline
                       prose-pre:bg-transparent prose-pre:border-none prose-pre:p-0
                       prose-img:rounded-xl prose-img:shadow-md
+                      prose-table:border-collapse prose-table:w-full prose-table:my-8
+                      prose-th:border-b prose-th:border-border/50 prose-th:text-left prose-th:p-4 prose-th:font-medium prose-th:text-foreground/80
+                      prose-td:border-b prose-td:border-border/20 prose-td:p-4 prose-td:text-sm prose-td:text-muted-foreground
                       ">
                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
                           components={{
                             code: CodeBlock,
                             h2: CustomH2,
