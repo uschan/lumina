@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import CommandMenu from './components/CommandMenu';
 import BackToTop from './components/BackToTop';
 import Starfield from './components/Starfield';
+import AIChatWidget from './components/AIChatWidget'; // Import Widget
 import { TRANSLATIONS } from './constants';
 import { ContentService } from './services/content';
 import { Language, Project, Post, ToolItem } from './types';
@@ -169,6 +170,9 @@ const AppContent: React.FC<{
             toggleTheme={toggleTheme} 
             toggleLang={toggleLang} 
           />
+          
+          {/* AI CHAT WIDGET - Connected to Global Data */}
+          <AIChatWidget projects={projects} posts={posts} tools={tools} />
         </>
       )}
 
