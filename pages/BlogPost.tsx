@@ -223,7 +223,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                             <span className="px-2 py-0.5 rounded border border-indigo-500/30 text-indigo-500 bg-indigo-500/5">{post.category}</span>
                         </div>
 
-                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-8 leading-[1.1]">
+                        <h1 className="text-4xl md:text-4xl font-bold tracking-tight text-foreground mb-8 leading-[1.1]">
                         {post.title}
                         </h1>
 
