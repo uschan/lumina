@@ -30,32 +30,37 @@ const Nexus: React.FC = () => {
     addLog('Starting seeding protocol...');
 
     try {
-        // Seed Projects
+        // --- SEED PROJECTS ---
         addLog(`Uploading ${PROJECTS.length} projects...`);
         
-        // STRICT MAPPING: Explicitly select only fields that exist in the DB Schema.
-        // This prevents "Could not find column 'challenge'" errors if local objects have extra properties.
-        const projectsPayload = PROJECTS.map((p) => ({ 
-            slug: p.slug,
-            title: p.title,
-            description: p.description,
-            content: p.content || '',
-            palette: p.palette || [],
-            tags: p.tags,
-            image: p.image,
-            links: p.links,
-            featured: p.featured || false,
-            publish_date: p.publishDate
-        }));
+        // Explicitly map fields to match schema exactly.
+        // We create a new object to ensure no hidden properties (like 'challenge') are passed.
+        const projectsPayload = PROJECTS.map((p) => {
+             const cleanProject = {
+                slug: p.slug,
+                title: p.title,
+                description: p.description,
+                content: p.content || '',
+                palette: p.palette || [],
+                tags: p.tags,
+                image: p.image,
+                links: p.links,
+                featured: p.featured || false,
+                publish_date: p.publishDate
+            };
+            return cleanProject;
+        });
+
+        // Debug: Log the first key set to ensure 'challenge' is gone
+        console.log('Seeding Projects Payload (First Item Keys):', Object.keys(projectsPayload[0]));
         
         const { error: projError } = await supabase.from('projects').insert(projectsPayload);
         if (projError) throw projError;
         addLog('Projects uploaded successfully.');
 
-        // Seed Posts
+        // --- SEED POSTS ---
         addLog(`Uploading ${POSTS.length} posts...`);
         
-        // STRICT MAPPING for Posts
         const postsPayload = POSTS.map((p) => ({
             slug: p.slug,
             title: p.title,
@@ -74,7 +79,7 @@ const Nexus: React.FC = () => {
         if (postError) throw postError;
         addLog('Posts uploaded successfully.');
 
-        // Seed Tools
+        // --- SEED TOOLS ---
         addLog(`Uploading ${TOOLS.length} tools...`);
         const toolsPayload = TOOLS.map((t) => ({
             name: t.name,
@@ -91,6 +96,7 @@ const Nexus: React.FC = () => {
 
     } catch (e: any) {
         addLog(`Seeding Error: ${e.message}`);
+        console.error("Full seeding error:", e);
         setStatus('error');
     }
   };
@@ -103,7 +109,7 @@ const Nexus: React.FC = () => {
                 <ShieldCheck size={24} />
                 <h1 className="text-xl font-bold tracking-widest">NEXUS CONTROL</h1>
             </div>
-            <div className="text-xs opacity-50">V.0.1.0-ALPHA</div>
+            <div className="text-xs opacity-50">V.0.2.0-BETA</div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

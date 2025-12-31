@@ -88,7 +88,6 @@ Using Framer Motion with Grid allows for layout transitions.
 `;
 
 // --- DATA COLLECTIONS (MOCK) ---
-// Kept for seeding purposes
 
 export const PROJECTS: Project[] = [
   {
@@ -226,7 +225,7 @@ export const ContentService = {
   getPosts: () => POSTS,
   getTools: () => TOOLS,
 
-  // Async methods calling Supabase with Fallback
+  // Async methods calling Supabase with Smart Fallback
   fetchProjects: async (): Promise<Project[]> => {
     if (!isConfigured) return PROJECTS;
 
@@ -237,16 +236,21 @@ export const ContentService = {
         .order('publish_date', { ascending: false });
       
       if (error) {
-        console.warn('Supabase fetch error (projects), falling back to mock.');
+        console.warn('Supabase fetch error (projects), falling back to mock.', error);
         return PROJECTS;
       }
 
-      return (data || []).map((p: any) => ({
+      // Fallback: If DB is empty, return local mock data
+      if (!data || data.length === 0) {
+        return PROJECTS;
+      }
+
+      return data.map((p: any) => ({
         ...p,
-        publishDate: p.publish_date, // Map snake_case to camelCase
+        publishDate: p.publish_date,
       }));
     } catch (e) {
-      console.warn('Supabase exception, falling back to mock.');
+      console.warn('Supabase exception, falling back to mock.', e);
       return PROJECTS;
     }
   },
@@ -261,17 +265,22 @@ export const ContentService = {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Supabase fetch error (posts), falling back to mock.');
+        console.warn('Supabase fetch error (posts), falling back to mock.', error);
         return POSTS;
       }
 
-      return (data || []).map((p: any) => ({
+      // Fallback: If DB is empty, return local mock data
+      if (!data || data.length === 0) {
+        return POSTS;
+      }
+
+      return data.map((p: any) => ({
         ...p,
-        aiAnalysis: p.ai_analysis, // Map snake_case to camelCase
+        aiAnalysis: p.ai_analysis,
         readTime: p.read_time,
       }));
     } catch (e) {
-      console.warn('Supabase exception, falling back to mock.');
+      console.warn('Supabase exception, falling back to mock.', e);
       return POSTS;
     }
   },
@@ -286,13 +295,18 @@ export const ContentService = {
         .order('name', { ascending: true });
 
       if (error) {
-        console.warn('Supabase fetch error (tools), falling back to mock.');
+        console.warn('Supabase fetch error (tools), falling back to mock.', error);
         return TOOLS;
       }
 
-      return data || [];
+      // Fallback: If DB is empty, return local mock data
+      if (!data || data.length === 0) {
+        return TOOLS;
+      }
+
+      return data;
     } catch (e) {
-      console.warn('Supabase exception, falling back to mock.');
+      console.warn('Supabase exception, falling back to mock.', e);
       return TOOLS;
     }
   }
