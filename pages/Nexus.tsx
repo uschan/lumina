@@ -1,393 +1,429 @@
+
 import React, { useState, useEffect } from 'react';
-import { supabase, checkConnection } from '../services/supabase';
-import { PROJECTS, POSTS, TOOLS } from '../services/content';
-import { STORAGE_KEY_API, STORAGE_KEY_URL } from '../services/ai';
+import { ProjectService, PostService, ToolService } from '../services/content';
+import { Project, Post, ToolItem } from '../types';
 import { 
-  Database, Upload, ShieldCheck, Server, Lock, Settings, 
-  LayoutList, Save, Key, Globe, RefreshCw, Terminal, Eye, AlertCircle
+  ShieldCheck, Lock, LayoutDashboard, FileText, Cpu,
+  Plus, Trash2, Edit3, RefreshCw, X, LogOut, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type Tab = 'dashboard' | 'content' | 'settings';
+// ADMIN PIN CONFIG
+const ADMIN_PIN = "2077"; 
+
+type TabType = 'projects' | 'posts' | 'tools';
 
 const Nexus: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
-  const [status, setStatus] = useState<string>('idle');
-  const [log, setLog] = useState<string[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [authError, setAuthError] = useState(false);
   
-  // Settings State
-  const [apiKey, setApiKey] = useState('');
-  const [proxyUrl, setProxyUrl] = useState('');
+  const [activeTab, setActiveTab] = useState<TabType>('projects');
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Data View State
-  const [dbProjects, setDbProjects] = useState<any[]>([]);
-  const [dbPosts, setDbPosts] = useState<any[]>([]);
-  const [viewLoading, setViewLoading] = useState(false);
+  // Data State
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [tools, setTools] = useState<ToolItem[]>([]);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editType, setEditType] = useState<TabType>('projects');
 
   useEffect(() => {
-    // Load settings from storage
-    setApiKey(localStorage.getItem(STORAGE_KEY_API) || '');
-    setProxyUrl(localStorage.getItem(STORAGE_KEY_URL) || '');
+    // Check session
+    if (sessionStorage.getItem('nexus_auth') === 'true') {
+      setIsAuthenticated(true);
+      loadData();
+    }
   }, []);
 
-  const addLog = (msg: string, type: 'info' | 'error' | 'success' = 'info') => {
-      const prefix = type === 'error' ? '[ERR]' : type === 'success' ? '[OK]' : '[INFO]';
-      setLog(prev => [`${prefix} [${new Date().toLocaleTimeString()}] ${msg}`, ...prev]); // Newest first
-  };
-
-  const handleTestConnection = async () => {
-    setStatus('checking');
-    addLog('Initiating handshake with Supabase...');
-    const result = await checkConnection();
-    if (result.success) {
-        addLog(`Connection Verified. Access to projects table confirmed. Count: ${result.count}`, 'success');
-        setStatus('connected');
-        fetchDataPreview();
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pinInput === ADMIN_PIN) {
+      setIsAuthenticated(true);
+      setAuthError(false);
+      sessionStorage.setItem('nexus_auth', 'true');
+      loadData();
     } else {
-        addLog(`Connection Failed: ${(result.error as any)?.message}`, 'error');
-        setStatus('error');
+      setAuthError(true);
+      setPinInput("");
+      setTimeout(() => setAuthError(false), 2000);
     }
   };
 
-  const fetchDataPreview = async () => {
-    setViewLoading(true);
+  const handleLogout = () => {
+      setIsAuthenticated(false);
+      sessionStorage.removeItem('nexus_auth');
+  };
+
+  const loadData = async () => {
+    setIsLoading(true);
     try {
-        const { data: pData } = await supabase.from('projects').select('id, title, slug, published:featured');
-        const { data: bData } = await supabase.from('posts').select('id, title, category, date');
-        setDbProjects(pData || []);
-        setDbPosts(bData || []);
+      const [p, b, t] = await Promise.all([
+          ProjectService.fetchAll(),
+          PostService.fetchAll(),
+          ToolService.fetchAll()
+      ]);
+      setProjects(p);
+      setPosts(b);
+      setTools(t);
     } catch (e) {
-        console.error(e);
+      console.error(e);
+      alert("Failed to load data. Check database connection.");
     } finally {
-        setViewLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleSaveSettings = () => {
-    localStorage.setItem(STORAGE_KEY_API, apiKey);
-    localStorage.setItem(STORAGE_KEY_URL, proxyUrl);
-    addLog('System Configuration Saved. AI Module updated.', 'success');
-    alert('Settings Saved');
+  const openEditor = (type: TabType, item?: any) => {
+    setEditType(type);
+    // Initialize default structure based on type
+    if (item) {
+        setEditingItem({ ...item });
+    } else {
+        if (type === 'projects') setEditingItem({ tags: [], links: {}, featured: false });
+        if (type === 'posts') setEditingItem({ tags: [], published: true, type: 'insight' });
+        if (type === 'tools') setEditingItem({ iconName: 'Cpu' });
+    }
+    setIsModalOpen(true);
   };
 
-  const handleSeed = async () => {
-    if (!window.confirm("This will overwrite/append local content to Supabase. Continue?")) return;
-    
-    setStatus('seeding');
-    addLog('Starting seeding protocol...');
-
+  const handleSaveItem = async () => {
+    if (!editingItem) return;
+    setIsLoading(true);
     try {
-        // --- SEED PROJECTS ---
-        addLog(`Uploading ${PROJECTS.length} projects...`);
-        const projectsPayload = PROJECTS.map((p) => ({
-                slug: p.slug,
-                title: p.title,
-                description: p.description,
-                content: p.content || '',
-                palette: p.palette || [],
-                tags: p.tags,
-                image: p.image,
-                links: p.links,
-                featured: p.featured || false,
-                publish_date: p.publishDate
-        }));
-        
-        // Use upsert to prevent duplicates on slug if constraint exists, or just insert
-        const { error: projError } = await supabase.from('projects').upsert(projectsPayload, { onConflict: 'slug' });
-        if (projError) throw projError;
-        addLog('Projects synced.', 'success');
-
-        // --- SEED POSTS ---
-        addLog(`Uploading ${POSTS.length} posts...`);
-        const postsPayload = POSTS.map((p) => ({
-            slug: p.slug,
-            title: p.title,
-            excerpt: p.excerpt,
-            category: p.category,
-            tags: p.tags,
-            ai_analysis: p.aiAnalysis,
-            content: p.content,
-            date: p.date,
-            type: p.type,
-            read_time: p.readTime,
-            published: p.published || true
-        }));
-        const { error: postError } = await supabase.from('posts').upsert(postsPayload, { onConflict: 'slug' });
-        if (postError) throw postError;
-        addLog('Posts synced.', 'success');
-
-        // --- SEED TOOLS ---
-        addLog(`Uploading ${TOOLS.length} tools...`);
-        // Tools don't have unique slug usually, so we might duplicate if we just insert. 
-        // For this demo, we'll try to insert.
-        const toolsPayload = TOOLS.map((t) => ({
-            name: t.name,
-            category: t.category,
-            description: t.description,
-            icon_name: t.name 
-        }));
-        const { error: toolError } = await supabase.from('tools').insert(toolsPayload);
-        if (toolError) {
-             // Ignore tool duplicates error for now or handle gracefully
-             addLog(`Tool sync note: ${toolError.message}`, 'info');
-        } else {
-             addLog('Tools synced.', 'success');
+        if (editType === 'projects') {
+            await ProjectService.upsert({
+                ...editingItem,
+                tags: typeof editingItem.tags === 'string' ? editingItem.tags.split(',').map((t:string)=>t.trim()) : editingItem.tags
+            });
+        } else if (editType === 'posts') {
+            await PostService.upsert({
+                ...editingItem,
+                tags: typeof editingItem.tags === 'string' ? editingItem.tags.split(',').map((t:string)=>t.trim()) : editingItem.tags
+            });
+        } else if (editType === 'tools') {
+            await ToolService.upsert(editingItem);
         }
-
-        setStatus('success');
-        addLog('Database seeding complete.', 'success');
-        fetchDataPreview();
-
+        await loadData();
+        setIsModalOpen(false);
     } catch (e: any) {
-        if (e.code === '42501') {
-             addLog(`PERMISSION DENIED (42501): Row Level Security Policy Violation.`, 'error');
-             addLog(`Run policies in Supabase SQL Editor.`, 'error');
-        } else {
-             addLog(`Seeding Error: ${e.message}`, 'error');
-        }
-        setStatus('error');
+        alert(`Error saving item: ${e.message}`);
+    } finally {
+        setIsLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen pt-24 px-4 sm:px-6 bg-[#050505] text-green-500 font-mono selection:bg-green-900 selection:text-white pb-20">
-      <div className="max-w-6xl mx-auto">
-        
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 border-b border-green-500/30 pb-6 gap-4">
-            <div>
-                <div className="flex items-center gap-3 mb-1">
-                    <ShieldCheck size={28} />
-                    <h1 className="text-2xl font-bold tracking-widest">NEXUS CONTROL</h1>
-                </div>
-                <div className="text-xs opacity-50 pl-10">SYSTEM ADMINISTRATION INTERFACE V.2.1</div>
-            </div>
-            
-            <div className="flex gap-2">
-                <TabButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={<Terminal size={16} />} label="Console" />
-                <TabButton active={activeTab === 'content'} onClick={() => setActiveTab('content')} icon={<LayoutList size={16} />} label="Data View" />
-                <TabButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings size={16} />} label="Config" />
-            </div>
-        </div>
+  const handleDelete = async (id: string | undefined, type: TabType) => {
+      if (!id) return;
+      if(!window.confirm("Are you sure you want to delete this item? This cannot be undone.")) return;
+      
+      setIsLoading(true);
+      try {
+          if (type === 'projects') await ProjectService.delete(id);
+          else if (type === 'posts') await PostService.delete(id);
+          else if (type === 'tools') await ToolService.delete(id);
+          await loadData();
+      } catch(e: any) { 
+          alert(`Error deleting: ${e.message}`);
+      } finally { 
+          setIsLoading(false); 
+      }
+  };
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* LEFT COLUMN: Main Interaction Area */}
-            <div className="lg:col-span-2 space-y-6">
-                
-                {/* SETTINGS TAB */}
-                {activeTab === 'settings' && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-black/40 border border-green-500/30 rounded-lg p-6 backdrop-blur-sm">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-                            <Settings size={20} /> System Configuration
-                        </h2>
-                        
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-xs uppercase tracking-wider opacity-70 mb-2 flex items-center gap-2">
-                                    <Key size={14} /> Gemini API Key
-                                </label>
-                                <input 
-                                    type="password" 
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder="Enter your Google Gemini API Key"
-                                    className="w-full bg-black border border-green-500/30 rounded px-4 py-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500/50 transition-all placeholder:text-green-900"
-                                />
-                                <p className="text-[10px] mt-2 opacity-50">Key is stored locally in your browser (LocalStorage). It is never sent to our servers.</p>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs uppercase tracking-wider opacity-70 mb-2 flex items-center gap-2">
-                                    <Globe size={14} /> Custom API Base URL (Proxy)
-                                </label>
-                                <input 
-                                    type="text" 
-                                    value={proxyUrl}
-                                    onChange={(e) => setProxyUrl(e.target.value)}
-                                    placeholder="e.g., https://openai-proxy.com/v1"
-                                    className="w-full bg-black border border-green-500/30 rounded px-4 py-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500/50 transition-all placeholder:text-green-900"
-                                />
-                                <p className="text-[10px] mt-2 opacity-50 text-yellow-500/80">
-                                    <AlertCircle size={10} className="inline mr-1"/>
-                                    Required for users in restricted regions (CN). Leave empty to use default Google endpoint.
-                                </p>
-                            </div>
-
-                            <button 
-                                onClick={handleSaveSettings}
-                                className="flex items-center gap-2 bg-green-900/20 hover:bg-green-500/20 border border-green-500/50 text-green-500 px-6 py-2 rounded text-sm uppercase tracking-wider transition-all"
-                            >
-                                <Save size={16} /> Save Configuration
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* DASHBOARD TAB */}
-                {activeTab === 'dashboard' && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                        {/* Status Cards */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 border border-green-500/20 rounded bg-green-500/5">
-                                <h3 className="flex items-center gap-2 font-bold mb-2 text-xs uppercase opacity-70">
-                                    <Server size={14} /> Database Uplink
-                                </h3>
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full ${status === 'connected' || status === 'success' ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500'}`} />
-                                    <span className="text-xl font-bold">{status === 'connected' || status === 'success' ? 'ACTIVE' : 'OFFLINE'}</span>
-                                </div>
-                            </div>
-                            <div className="p-4 border border-green-500/20 rounded bg-green-500/5">
-                                <h3 className="flex items-center gap-2 font-bold mb-2 text-xs uppercase opacity-70">
-                                    <Database size={14} /> Local Records
-                                </h3>
-                                <div className="flex items-center gap-4 text-sm">
-                                    <span>Projects: {PROJECTS.length}</span>
-                                    <span>Posts: {POSTS.length}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="p-6 border border-green-500/30 rounded bg-black/40 backdrop-blur-sm">
-                            <h3 className="flex items-center gap-2 font-bold mb-6 text-sm uppercase">
-                                <RefreshCw size={16} /> Sync Operations
-                            </h3>
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <button 
-                                    onClick={handleTestConnection}
-                                    className="flex-1 py-3 border border-green-500/50 hover:bg-green-500/10 transition-colors text-xs uppercase tracking-wider rounded flex items-center justify-center gap-2"
-                                >
-                                    Test Connection
-                                </button>
-                                <button 
-                                    onClick={handleSeed}
-                                    disabled={status !== 'connected' && status !== 'success'}
-                                    className={`flex-1 py-3 border transition-colors text-xs uppercase tracking-wider rounded flex items-center justify-center gap-2 ${
-                                        status === 'connected' || status === 'success'
-                                        ? 'border-green-500 bg-green-500/10 hover:bg-green-500/20 text-white cursor-pointer' 
-                                        : 'border-gray-800 text-gray-700 cursor-not-allowed'
-                                    }`}
-                                >
-                                    <Upload size={14} /> Push to Supabase
-                                </button>
-                            </div>
-                            <p className="text-[10px] mt-4 opacity-50 text-center">
-                                * Pushing will upsert (update/insert) local data to the connected Supabase instance.
-                            </p>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* CONTENT TAB */}
-                {activeTab === 'content' && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-black/40 border border-green-500/30 rounded-lg p-6 backdrop-blur-sm">
-                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-bold flex items-center gap-2">
-                                <Database size={20} /> Remote Data Preview
-                            </h2>
-                            <button onClick={fetchDataPreview} className="p-2 hover:bg-green-500/20 rounded"><RefreshCw size={14}/></button>
-                         </div>
-
-                         {viewLoading ? (
-                             <div className="py-12 text-center opacity-50 animate-pulse">Scanning database vectors...</div>
-                         ) : (
-                             <div className="space-y-8">
-                                <div>
-                                    <h3 className="text-xs uppercase opacity-70 mb-3 border-b border-green-500/20 pb-1">Projects Table ({dbProjects.length})</h3>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-xs text-left">
-                                            <thead>
-                                                <tr className="text-green-700">
-                                                    <th className="py-2">ID</th>
-                                                    <th className="py-2">Title</th>
-                                                    <th className="py-2">Slug</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {dbProjects.map(p => (
-                                                    <tr key={p.id} className="border-b border-green-900/20 hover:bg-green-500/5">
-                                                        <td className="py-2 opacity-50 font-mono">{p.id.substring(0,8)}...</td>
-                                                        <td className="py-2 font-bold">{p.title}</td>
-                                                        <td className="py-2 opacity-70">{p.slug}</td>
-                                                    </tr>
-                                                ))}
-                                                {dbProjects.length === 0 && <tr><td colSpan={3} className="py-4 text-center opacity-30">No data found</td></tr>}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xs uppercase opacity-70 mb-3 border-b border-green-500/20 pb-1">Posts Table ({dbPosts.length})</h3>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-xs text-left">
-                                            <thead>
-                                                <tr className="text-green-700">
-                                                    <th className="py-2">Title</th>
-                                                    <th className="py-2">Category</th>
-                                                    <th className="py-2">Date</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {dbPosts.map(p => (
-                                                    <tr key={p.id} className="border-b border-green-900/20 hover:bg-green-500/5">
-                                                        <td className="py-2 font-bold">{p.title}</td>
-                                                        <td className="py-2 opacity-70">{p.category}</td>
-                                                        <td className="py-2 opacity-50">{p.date}</td>
-                                                    </tr>
-                                                ))}
-                                                {dbPosts.length === 0 && <tr><td colSpan={3} className="py-4 text-center opacity-30">No data found</td></tr>}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                             </div>
-                         )}
-                    </motion.div>
-                )}
-            </div>
-
-            {/* RIGHT COLUMN: Terminal Log (Always Visible) */}
-            <div className="lg:col-span-1">
-                <div className="bg-black border border-green-500/30 rounded-lg p-4 h-[500px] flex flex-col sticky top-24">
-                    <div className="flex items-center justify-between mb-4 border-b border-green-900/30 pb-2">
-                        <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                            <Terminal size={12} /> System Log
-                        </span>
-                        <div className="flex gap-1">
-                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"/>
-                        </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto font-mono text-[10px] space-y-1 scrollbar-thin scrollbar-thumb-green-900">
-                        {log.length === 0 && <span className="opacity-30">System idle. Waiting for input...</span>}
-                        {log.map((l, i) => (
-                            <div key={i} className={`break-words leading-tight pb-1 border-b border-green-900/10 ${l.includes('[ERR]') ? 'text-red-400' : l.includes('[OK]') ? 'text-green-400' : 'text-green-600'}`}>
-                                <span className="opacity-30 mr-1">{`>`}</span>
-                                {l}
-                            </div>
-                        ))}
-                    </div>
+  // --- RENDER LOGIN ---
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white font-mono">
+         <div className={`w-full max-w-sm p-8 border rounded-2xl bg-white/5 backdrop-blur-xl transition-colors duration-300 ${authError ? 'border-red-500/50' : 'border-white/10'}`}>
+            <div className="flex justify-center mb-8">
+                <div className={`p-4 rounded-full bg-white/5 ${authError ? 'text-red-500' : 'text-indigo-500'}`}>
+                    <Lock size={32} />
                 </div>
             </div>
-        </div>
+            <h1 className="text-center text-xl font-bold tracking-[0.2em] mb-8 text-gray-300">NEXUS GATEWAY</h1>
+            <form onSubmit={handleLogin} className="space-y-6">
+                <div>
+                    <input 
+                      type="password" 
+                      value={pinInput}
+                      onChange={e => setPinInput(e.target.value)}
+                      placeholder="ACCESS PIN"
+                      className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-4 text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-700 text-white"
+                      autoFocus
+                    />
+                </div>
+                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-lg font-bold tracking-wider transition-all">
+                    AUTHENTICATE
+                </button>
+            </form>
+            <div className="text-center text-[10px] text-gray-600 mt-6">
+                SECURE CONNECTION REQUIRED
+            </div>
+         </div>
       </div>
+    );
+  }
+
+  // --- RENDER DASHBOARD ---
+  return (
+    <div className="min-h-screen bg-[#09090b] text-gray-200 font-sans">
+      
+      {/* Top Bar */}
+      <div className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/10 h-16 flex items-center justify-between px-6">
+         <div className="flex items-center gap-3">
+             <ShieldCheck className="text-indigo-500" />
+             <span className="font-bold tracking-tight">NEXUS <span className="text-gray-600 font-normal">v2.0</span></span>
+             {isLoading && <RefreshCw className="animate-spin text-gray-500 ml-2" size={14} />}
+         </div>
+         <button onClick={handleLogout} className="text-xs font-mono text-gray-500 hover:text-white flex items-center gap-2">
+             LOGOUT <LogOut size={12} />
+         </button>
+      </div>
+
+      <div className="pt-24 pb-20 px-4 sm:px-6 max-w-7xl mx-auto">
+         
+         {/* Navigation Tabs */}
+         <div className="flex items-center gap-2 mb-8 border-b border-white/10 pb-1">
+             <TabButton active={activeTab === 'projects'} onClick={() => setActiveTab('projects')} icon={<LayoutDashboard size={16}/>} label="Projects" />
+             <TabButton active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} icon={<FileText size={16}/>} label="Posts" />
+             <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={<Cpu size={16}/>} label="Tools" />
+         </div>
+
+         {/* LIST VIEWS */}
+         
+         {/* PROJECTS LIST */}
+         {activeTab === 'projects' && (
+             <div className="space-y-4">
+                 <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-medium text-gray-300">Projects ({projects.length})</h2>
+                    <AddButton onClick={() => openEditor('projects')} label="New Project" />
+                 </div>
+                 <div className="grid gap-4">
+                    {projects.map(p => (
+                        <div key={p.id} className="group flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl hover:border-indigo-500/30 transition-all">
+                            <div className="flex items-center gap-4">
+                                <div className="w-16 h-10 bg-gray-800 rounded overflow-hidden">
+                                    <img src={p.image} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt="" />
+                                </div>
+                                <div>
+                                    <div className="font-bold text-sm text-gray-200">{p.title}</div>
+                                    <div className="text-xs text-gray-500 font-mono flex gap-2">
+                                        <span>/{p.slug}</span>
+                                        {p.featured && <span className="text-indigo-400">★ Featured</span>}
+                                    </div>
+                                </div>
+                            </div>
+                            <ActionButtons onEdit={() => openEditor('projects', p)} onDelete={() => handleDelete(p.id, 'projects')} />
+                        </div>
+                    ))}
+                 </div>
+             </div>
+         )}
+
+         {/* POSTS LIST */}
+         {activeTab === 'posts' && (
+             <div className="space-y-4">
+                 <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-medium text-gray-300">Blog Posts ({posts.length})</h2>
+                    <AddButton onClick={() => openEditor('posts')} label="New Post" />
+                 </div>
+                 <div className="grid gap-4">
+                    {posts.map(p => (
+                        <div key={p.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl hover:border-indigo-500/30 transition-all">
+                            <div>
+                                <div className="font-bold text-sm text-gray-200">{p.title}</div>
+                                <div className="flex gap-2 text-xs text-gray-500 font-mono mt-1">
+                                    <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/5">{p.category}</span>
+                                    <span>{p.date}</span>
+                                </div>
+                            </div>
+                            <ActionButtons onEdit={() => openEditor('posts', p)} onDelete={() => handleDelete(p.id, 'posts')} />
+                        </div>
+                    ))}
+                 </div>
+             </div>
+         )}
+
+         {/* TOOLS LIST */}
+         {activeTab === 'tools' && (
+             <div className="space-y-4">
+                 <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-medium text-gray-300">Workspace Tools ({tools.length})</h2>
+                    <AddButton onClick={() => openEditor('tools')} label="New Tool" />
+                 </div>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {tools.map(t => (
+                        <div key={t.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl hover:border-indigo-500/30 transition-all">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-bold text-sm text-gray-200">{t.name}</span>
+                                    <span className="text-[10px] text-gray-500 font-mono border border-white/10 px-1 rounded">{t.iconName}</span>
+                                </div>
+                                <div className="text-xs text-gray-500">{t.category}</div>
+                            </div>
+                            <ActionButtons onEdit={() => openEditor('tools', t)} onDelete={() => handleDelete(t.id, 'tools')} />
+                        </div>
+                    ))}
+                 </div>
+             </div>
+         )}
+
+      </div>
+
+      {/* --- EDITOR MODAL --- */}
+      <AnimatePresence>
+        {isModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="w-full max-w-2xl bg-[#111] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+                >
+                    <div className="flex justify-between items-center p-4 border-b border-white/10 bg-white/5">
+                        <div className="flex items-center gap-2">
+                             <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                             <h3 className="font-bold text-sm uppercase tracking-wider">{editingItem?.id ? 'Edit' : 'Create'} {editType.slice(0, -1)}</h3>
+                        </div>
+                        <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white"><X size={20}/></button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+                        
+                        {/* PROJECT FIELDS */}
+                        {editType === 'projects' && (
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Title" value={editingItem?.title} onChange={v => setEditingItem({...editingItem, title: v})} />
+                                    <Input label="Slug (URL)" value={editingItem?.slug} onChange={v => setEditingItem({...editingItem, slug: v})} />
+                                </div>
+                                <Input label="Description (Short)" value={editingItem?.description} onChange={v => setEditingItem({...editingItem, description: v})} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Image URL" value={editingItem?.image} onChange={v => setEditingItem({...editingItem, image: v})} />
+                                    <Input label="Date (YYYY-MM-DD)" value={editingItem?.publishDate} onChange={v => setEditingItem({...editingItem, publishDate: v})} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Github URL" value={editingItem?.links?.github} onChange={v => setEditingItem({...editingItem, links: {...editingItem.links, github: v}})} />
+                                    <Input label="Demo URL" value={editingItem?.links?.demo} onChange={v => setEditingItem({...editingItem, links: {...editingItem.links, demo: v}})} />
+                                </div>
+                                <Input label="Tags (comma separated)" value={Array.isArray(editingItem?.tags) ? editingItem.tags.join(', ') : editingItem?.tags} onChange={v => setEditingItem({...editingItem, tags: v})} />
+                                <TextArea label="Content (Markdown)" value={editingItem?.content} onChange={v => setEditingItem({...editingItem, content: v})} />
+                                <div className="flex items-center gap-2">
+                                    <input type="checkbox" checked={editingItem?.featured || false} onChange={e => setEditingItem({...editingItem, featured: e.target.checked})} />
+                                    <label className="text-sm text-gray-400">Featured Project</label>
+                                </div>
+                            </>
+                        )}
+
+                        {/* POST FIELDS */}
+                        {editType === 'posts' && (
+                            <>
+                                <Input label="Title" value={editingItem?.title} onChange={v => setEditingItem({...editingItem, title: v})} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Slug" value={editingItem?.slug} onChange={v => setEditingItem({...editingItem, slug: v})} />
+                                    <Input label="Category" value={editingItem?.category} onChange={v => setEditingItem({...editingItem, category: v})} />
+                                </div>
+                                <Input label="Excerpt" value={editingItem?.excerpt} onChange={v => setEditingItem({...editingItem, excerpt: v})} />
+                                <div className="grid grid-cols-3 gap-4">
+                                    <Input label="Date" value={editingItem?.date} onChange={v => setEditingItem({...editingItem, date: v})} />
+                                    <Input label="Read Time" value={editingItem?.readTime} onChange={v => setEditingItem({...editingItem, readTime: v})} />
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-xs text-gray-500 font-mono">Type</label>
+                                        <select 
+                                            value={editingItem?.type} 
+                                            onChange={e => setEditingItem({...editingItem, type: e.target.value})}
+                                            className="bg-black/30 border border-white/10 rounded-lg p-2 text-sm text-white"
+                                        >
+                                            <option value="insight">Insight</option>
+                                            <option value="brief">Brief</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <Input label="Tags" value={Array.isArray(editingItem?.tags) ? editingItem.tags.join(', ') : editingItem?.tags} onChange={v => setEditingItem({...editingItem, tags: v})} />
+                                <TextArea label="AI Analysis (Summary)" value={editingItem?.aiAnalysis} onChange={v => setEditingItem({...editingItem, aiAnalysis: v})} />
+                                <TextArea label="Content (Markdown)" value={editingItem?.content} onChange={v => setEditingItem({...editingItem, content: v})} height="h-64" />
+                            </>
+                        )}
+
+                        {/* TOOL FIELDS */}
+                        {editType === 'tools' && (
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Tool Name" value={editingItem?.name} onChange={v => setEditingItem({...editingItem, name: v})} />
+                                    <Input label="Category" value={editingItem?.category} onChange={v => setEditingItem({...editingItem, category: v})} />
+                                </div>
+                                <Input label="Icon Name (Lucide Icon String)" value={editingItem?.iconName} onChange={v => setEditingItem({...editingItem, iconName: v})} />
+                                <Input label="Description" value={editingItem?.description} onChange={v => setEditingItem({...editingItem, description: v})} />
+                            </>
+                        )}
+                        
+                    </div>
+
+                    <div className="p-4 border-t border-white/10 bg-white/5 flex justify-end gap-3">
+                        <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancel</button>
+                        <button onClick={handleSaveItem} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2">
+                             <Check size={16} /> Save Changes
+                        </button>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };
 
-const TabButton = ({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) => (
+// --- SUB COMPONENTS ---
+
+const TabButton = ({ active, onClick, icon, label }: any) => (
     <button 
         onClick={onClick}
-        className={`flex items-center gap-2 px-4 py-2 rounded text-xs uppercase tracking-wider transition-all ${
-            active 
-            ? 'bg-green-500 text-black font-bold shadow-[0_0_10px_rgba(34,197,94,0.4)]' 
-            : 'border border-green-500/30 text-green-500 hover:bg-green-500/10'
+        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border-b-2 ${
+            active ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-300'
         }`}
     >
-        {icon} <span className="hidden sm:inline">{label}</span>
+        {icon} {label}
     </button>
+);
+
+const AddButton = ({ onClick, label }: any) => (
+    <button onClick={onClick} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-colors">
+        <Plus size={14} /> {label}
+    </button>
+);
+
+const ActionButtons = ({ onEdit, onDelete }: any) => (
+    <div className="flex items-center gap-1">
+        <button onClick={onEdit} className="p-2 text-gray-500 hover:bg-white/10 hover:text-white rounded-lg transition-colors"><Edit3 size={16}/></button>
+        <button onClick={onDelete} className="p-2 text-gray-500 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors"><Trash2 size={16}/></button>
+    </div>
+);
+
+const Input = ({ label, value, onChange }: any) => (
+    <div>
+        <label className="block text-[10px] font-mono text-gray-500 mb-1 uppercase tracking-wider">{label}</label>
+        <input 
+            type="text" 
+            className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-indigo-500 outline-none transition-colors"
+            value={value || ''}
+            onChange={e => onChange(e.target.value)}
+        />
+    </div>
+);
+
+const TextArea = ({ label, value, onChange, height = "h-32" }: any) => (
+    <div>
+        <label className="block text-[10px] font-mono text-gray-500 mb-1 uppercase tracking-wider">{label}</label>
+        <textarea 
+            className={`w-full ${height} bg-black/30 border border-white/10 rounded-lg p-3 text-sm text-gray-200 font-mono focus:border-indigo-500 outline-none resize-none transition-colors`}
+            value={value || ''}
+            onChange={e => onChange(e.target.value)}
+        />
+    </div>
 );
 
 export default Nexus;

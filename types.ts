@@ -1,3 +1,4 @@
+
 export type Language = 'en' | 'zh';
 
 export interface Translation {
@@ -26,7 +27,7 @@ export interface Project {
   slug: string;        // SEO Friendly URL
   title: string;
   description: string; 
-  content?: string;    // Markdown Content (Replaces rigid challenge/solution)
+  content?: string;    // Markdown Content
   palette?: string[];
   tags: string[];
   image: string;
@@ -43,19 +44,21 @@ export interface Post {
   slug: string;        // SEO Friendly URL
   title: string;
   excerpt: string;
-  category: string;    // Taxonomy: 'Engineering' | 'Design' | 'Philosophy'
-  tags: string[];      // Taxonomy: ['React', 'AI', 'System']
+  category: string;    // Taxonomy
+  tags: string[];      // Taxonomy
   aiAnalysis?: string;
   content?: string;
   date: string;
-  type: 'insight' | 'brief'; // Visual style only
+  type: 'insight' | 'brief';
   readTime: string;
   published?: boolean;
 }
 
 export interface ToolItem {
+  id?: string;         // Database ID
   name: string;
   category: string;
-  icon?: any;
+  icon?: any;          // React Component (Runtime)
+  iconName?: string;   // String name for DB storage (e.g. 'Cpu')
   description: string;
 }
