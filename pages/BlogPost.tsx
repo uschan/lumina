@@ -13,8 +13,8 @@ interface BlogPostProps {
 }
 
 const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
-  const { id } = useParams<{ id: string }>();
-  const post = posts.find(p => p.id === id);
+  const { slug } = useParams<{ slug: string }>();
+  const post = posts.find(p => p.slug === slug);
   const [copied, setCopied] = useState(false);
   const [reactions, setReactions] = useState({ like: 124, heart: 45, rocket: 89 });
   const [activeId, setActiveId] = useState<string>('');
@@ -128,12 +128,21 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                 <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground mb-6 uppercase tracking-wider">
                   <span className="flex items-center gap-1"><Calendar size={12} /> {post.date}</span>
                   <span className="flex items-center gap-1"><Clock size={12} /> {post.readTime}</span>
-                  <span className="px-2 py-0.5 rounded border border-indigo-500/30 text-indigo-500">{post.type}</span>
+                  <span className="px-2 py-0.5 rounded border border-indigo-500/30 text-indigo-500">{post.category || post.type}</span>
                 </div>
 
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-8 leading-tight">
                   {post.title}
                 </h1>
+
+                {/* Tags Display */}
+                {post.tags && post.tags.length > 0 && (
+                   <div className="flex gap-2 mb-8">
+                     {post.tags.map(tag => (
+                        <span key={tag} className="px-2 py-1 rounded bg-secondary text-xs font-mono text-muted-foreground">#{tag}</span>
+                     ))}
+                   </div>
+                )}
 
                 {/* AI Analysis Block */}
                 {post.aiAnalysis && (

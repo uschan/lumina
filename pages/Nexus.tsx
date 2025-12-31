@@ -32,10 +32,20 @@ const Nexus: React.FC = () => {
     try {
         // Seed Projects
         addLog(`Uploading ${PROJECTS.length} projects...`);
-        // Remove ID to let Supabase generate UUIDs, or keep matches if you want persistence
-        const projectsPayload = PROJECTS.map(({ id, ...rest }) => ({ 
-            ...rest,
-            links: rest.links // jsonb
+        
+        // STRICT MAPPING: Explicitly select only fields that exist in the DB Schema.
+        // This prevents "Could not find column 'challenge'" errors if local objects have extra properties.
+        const projectsPayload = PROJECTS.map((p) => ({ 
+            slug: p.slug,
+            title: p.title,
+            description: p.description,
+            content: p.content || '',
+            palette: p.palette || [],
+            tags: p.tags,
+            image: p.image,
+            links: p.links,
+            featured: p.featured || false,
+            publish_date: p.publishDate
         }));
         
         const { error: projError } = await supabase.from('projects').insert(projectsPayload);
@@ -44,26 +54,33 @@ const Nexus: React.FC = () => {
 
         // Seed Posts
         addLog(`Uploading ${POSTS.length} posts...`);
-        const postsPayload = POSTS.map(({ id, aiAnalysis, readTime, ...rest }) => ({
-            ...rest,
-            ai_analysis: aiAnalysis,
-            read_time: readTime
+        
+        // STRICT MAPPING for Posts
+        const postsPayload = POSTS.map((p) => ({
+            slug: p.slug,
+            title: p.title,
+            excerpt: p.excerpt,
+            category: p.category,
+            tags: p.tags,
+            ai_analysis: p.aiAnalysis,
+            content: p.content,
+            date: p.date,
+            type: p.type,
+            read_time: p.readTime,
+            published: p.published || true
         }));
+
         const { error: postError } = await supabase.from('posts').insert(postsPayload);
         if (postError) throw postError;
         addLog('Posts uploaded successfully.');
 
         // Seed Tools
         addLog(`Uploading ${TOOLS.length} tools...`);
-        // Map icon to icon_name string
-        // Note: TOOLS in content.ts doesn't have icon name string easily accessible if it's already a component
-        // For this migration, we might need to manually set icon_name or extract it. 
-        // Assuming simple migration for text fields first.
         const toolsPayload = TOOLS.map((t) => ({
             name: t.name,
             category: t.category,
             description: t.description,
-            icon_name: 'Cpu' // Default fallback for now, needs manual update or smarter mapping
+            icon_name: t.name 
         }));
         const { error: toolError } = await supabase.from('tools').insert(toolsPayload);
         if (toolError) throw toolError;

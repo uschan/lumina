@@ -1,6 +1,6 @@
 import React from 'react';
 import { Project, Language } from '../types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import ProjectCard from '../components/ProjectCard';
 
 interface ProjectsProps {
@@ -32,11 +32,20 @@ const Projects: React.FC<ProjectsProps> = ({ projects, lang }) => {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project, index) => (
-            <div key={project.id} className="h-[420px]">
-              <ProjectCard project={project} index={index} />
-            </div>
-          ))}
+          <AnimatePresence mode='popLayout'>
+            {projects.map((project, index) => (
+                <motion.div 
+                  key={project.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="h-[420px]"
+                >
+                  <ProjectCard project={project} index={index} />
+                </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
     </div>

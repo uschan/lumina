@@ -1,7 +1,8 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/query-core';
+import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import Navigation from './components/Navigation';
 import ErrorBoundary from './components/ErrorBoundary';
 import CommandMenu from './components/CommandMenu';
@@ -26,7 +27,14 @@ const Tools = React.lazy(() => import('./pages/Tools'));
 const Nexus = React.lazy(() => import('./pages/Nexus'));
 
 // Initialize Query Client
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    }
+  }
+});
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -79,24 +87,29 @@ const AppContent: React.FC<{
   const isLanding = location.pathname === '/';
   const isNexus = location.pathname === '/nexus';
 
-  // Initial State: Use fallback content service BUT map icons immediately
-  // TODO: Replace with React Query fetch from Supabase in Phase 2
-  const [content] = useState<{
-    projects: Project[];
-    posts: Post[];
-    tools: ToolItem[];
-  }>(() => {
-    return {
-      projects: ContentService.getProjects(),
-      posts: ContentService.getPosts(),
-      tools: ContentService.getTools().map(t => ({
-        ...t,
-        icon: getIconForTool(t.name)
-      }))
-    };
+  // Fetch Data from Supabase
+  const { data: projects = [], isLoading: pLoading } = useQuery({ 
+    queryKey: ['projects'], 
+    queryFn: ContentService.fetchProjects 
   });
 
-  const { projects, posts, tools } = content;
+  const { data: posts = [], isLoading: blogLoading } = useQuery({ 
+    queryKey: ['posts'], 
+    queryFn: ContentService.fetchPosts 
+  });
+
+  const { data: toolsData = [], isLoading: tLoading } = useQuery({ 
+    queryKey: ['tools'], 
+    queryFn: ContentService.fetchTools 
+  });
+
+  // Map icons to tools after fetching
+  const tools = toolsData.map(tool => ({
+    ...tool,
+    icon: getIconForTool(tool.name)
+  }));
+
+  const isLoading = pLoading || blogLoading || tLoading;
 
   // Stats Logic
   const [stats, setStats] = useState({ total: 10234, today: 42 });
@@ -123,6 +136,10 @@ const AppContent: React.FC<{
     localStorage.setItem('lumina_last_visit_date', todayStr);
     setStats({ total: newTotal, today: newToday });
   }, []);
+
+  if (isLoading && !isLanding && !isNexus) {
+    return <PageLoader />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-500 flex flex-col">
@@ -174,9 +191,9 @@ const AppContent: React.FC<{
                   } 
                 />
                 <Route path="/projects" element={<Projects projects={projects} lang={lang} />} />
-                <Route path="/projects/:id" element={<ProjectDetail lang={lang} projects={projects} />} />
+                <Route path="/projects/:slug" element={<ProjectDetail lang={lang} projects={projects} />} />
                 <Route path="/insights" element={<Insights posts={posts} lang={lang} />} />
-                <Route path="/insights/:id" element={<BlogPost lang={lang} posts={posts} />} />
+                <Route path="/insights/:slug" element={<BlogPost lang={lang} posts={posts} />} />
                 <Route path="/tools" element={<Tools tools={tools} lang={lang} />} />
                 
                 {/* Hidden Admin Route */}

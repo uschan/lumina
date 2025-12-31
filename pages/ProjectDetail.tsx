@@ -3,9 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import { Language, Project } from '../types';
 import { ArrowLeft, Github, ExternalLink, Palette, Cpu, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import SupportWidget from '../components/SupportWidget';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import SEO from '../components/SEO';
+import CodeBlock from '../components/CodeBlock';
 
 interface ProjectDetailProps {
   lang: Language;
@@ -13,12 +15,22 @@ interface ProjectDetailProps {
 }
 
 const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
-  const { id } = useParams<{ id: string }>();
-  const project = projects.find(p => p.id === id);
+  const { slug } = useParams<{ slug: string }>();
+  const project = projects.find(p => p.slug === slug);
 
   if (!project) {
     return <div className="pt-32 text-center">Project not found</div>;
   }
+
+  // Custom H2 for Markdown in Projects
+  const CustomH2 = ({ children }: any) => {
+    return (
+      <div className="flex items-center gap-3 mt-12 mb-6 text-foreground">
+         <div className="p-2 rounded bg-indigo-500/10 text-indigo-500"><Layers size={20} /></div>
+         <h2 className="text-2xl font-bold">{children}</h2>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6">
@@ -83,34 +95,25 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Main Context (Left) */}
-          <div className="lg:col-span-8 space-y-12">
+          <div className="lg:col-span-8">
             
-            {/* Challenge & Solution */}
-            {project.challenge && (
-              <motion.section 
+            {/* Content Rendered via Markdown */}
+            {project.content && (
+              <motion.div 
                  initial={{ opacity: 0, y: 20 }}
                  whileInView={{ opacity: 1, y: 0 }}
                  viewport={{ once: true }}
-                 className="p-8 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm"
+                 className="p-8 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm prose prose-zinc dark:prose-invert max-w-none"
               >
-                <div className="flex items-center gap-3 mb-6 text-foreground">
-                   <div className="p-2 rounded bg-indigo-500/10 text-indigo-500"><Layers size={20} /></div>
-                   <h2 className="text-2xl font-bold">{lang === 'en' ? 'The Challenge' : '挑战'}</h2>
-                </div>
-                <p className="text-muted-foreground leading-relaxed text-lg mb-8">
-                  {project.challenge}
-                </p>
-
-                <div className="w-full h-px bg-border/50 mb-8" />
-
-                <div className="flex items-center gap-3 mb-6 text-foreground">
-                   <div className="p-2 rounded bg-emerald-500/10 text-emerald-500"><Cpu size={20} /></div>
-                   <h2 className="text-2xl font-bold">{lang === 'en' ? 'The Solution' : '解决方案'}</h2>
-                </div>
-                <p className="text-muted-foreground leading-relaxed text-lg">
-                  {project.solution}
-                </p>
-              </motion.section>
+                <ReactMarkdown
+                    components={{
+                        code: CodeBlock,
+                        h2: CustomH2
+                    }}
+                >
+                    {project.content}
+                </ReactMarkdown>
+              </motion.div>
             )}
           </div>
 

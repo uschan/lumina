@@ -23,10 +23,10 @@ export interface Translation {
 
 export interface Project {
   id: string;
+  slug: string;        // SEO Friendly URL
   title: string;
-  description: string; // Flattened: No longer { en: string, zh: string }
-  challenge?: string;
-  solution?: string;
+  description: string; 
+  content?: string;    // Markdown Content (Replaces rigid challenge/solution)
   palette?: string[];
   tags: string[];
   image: string;
@@ -35,17 +35,22 @@ export interface Project {
     demo?: string;
   };
   featured?: boolean;
+  publishDate?: string;
 }
 
 export interface Post {
   id: string;
-  title: string;       // Flattened
-  excerpt: string;     // Flattened
-  aiAnalysis?: string; // Flattened
+  slug: string;        // SEO Friendly URL
+  title: string;
+  excerpt: string;
+  category: string;    // Taxonomy: 'Engineering' | 'Design' | 'Philosophy'
+  tags: string[];      // Taxonomy: ['React', 'AI', 'System']
+  aiAnalysis?: string;
   content?: string;
   date: string;
-  type: 'insight' | 'brief';
+  type: 'insight' | 'brief'; // Visual style only
   readTime: string;
+  published?: boolean;
 }
 
 export interface ToolItem {

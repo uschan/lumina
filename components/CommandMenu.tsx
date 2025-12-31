@@ -142,7 +142,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ lang, toggleTheme, toggleLang
                       icon={<Cpu size={16} />} 
                       label={project.title}
                       desc={project.tags.slice(0, 2).join(', ')}
-                      onClick={() => handleSelect(`/projects/${project.id}`)} 
+                      onClick={() => handleSelect(`/projects/${project.slug}`)} 
                     />
                   ))}
                 </div>
@@ -158,7 +158,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ lang, toggleTheme, toggleLang
                         icon={<FileText size={16} />} 
                         label={post.title}
                         desc={post.date}
-                        onClick={() => handleSelect(`/insights/${post.id}`)} 
+                        onClick={() => handleSelect(`/insights/${post.slug}`)} 
                       />
                    ))}
                 </div>

@@ -65,7 +65,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
       <div className="relative z-10 flex flex-col h-full p-1" style={{ transform: 'translateZ(10px)' }}>
         
         {/* Image Area with "Scanner" Overlay - Wrapped in Link */}
-        <Link to={`/projects/${project.id}`} className="relative block aspect-[16/9] w-full overflow-hidden rounded-2xl bg-muted/20 cursor-pointer">
+        <Link to={`/projects/${project.slug}`} className="relative block aspect-[16/9] w-full overflow-hidden rounded-2xl bg-muted/20 cursor-pointer">
           <ImageWithSkeleton
             src={project.image}
             alt={project.title}
@@ -107,7 +107,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
             </div>
           </div>
 
-          <Link to={`/projects/${project.id}`}>
+          <Link to={`/projects/${project.slug}`}>
             <h3 className="text-xl font-medium tracking-tight text-foreground group-hover:text-indigo-500 transition-colors">
                 {project.title}
             </h3>
