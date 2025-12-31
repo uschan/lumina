@@ -136,10 +136,10 @@ const Insights: React.FC<InsightsProps> = ({ posts, lang }) => {
 
                 <div className="flex-1">
                   <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2 sm:mb-3 group-hover:text-indigo-500 transition-colors">
-                    {post.title[lang]}
+                    {post.title}
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-4 font-light">
-                    {post.excerpt[lang]}
+                    {post.excerpt}
                   </p>
                   <div className="flex items-center text-indigo-500 font-medium text-xs sm:text-sm group-hover:translate-x-2 transition-transform">
                     {lang === 'en' ? 'Access Data' : '读取数据'}

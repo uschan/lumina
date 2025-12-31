@@ -24,20 +24,10 @@ export interface Translation {
 export interface Project {
   id: string;
   title: string;
-  description: {
-    en: string;
-    zh: string;
-  };
-  // New detailed fields
-  challenge?: {
-    en: string;
-    zh: string;
-  };
-  solution?: {
-    en: string;
-    zh: string;
-  };
-  palette?: string[]; // Hex codes
+  description: string; // Flattened: No longer { en: string, zh: string }
+  challenge?: string;
+  solution?: string;
+  palette?: string[];
   tags: string[];
   image: string;
   links: {
@@ -49,19 +39,10 @@ export interface Project {
 
 export interface Post {
   id: string;
-  title: {
-    en: string;
-    zh: string;
-  };
-  excerpt: {
-    en: string;
-    zh: string;
-  };
-  aiAnalysis?: {
-    en: string;
-    zh: string;
-  };
-  content?: string; // Markdown content
+  title: string;       // Flattened
+  excerpt: string;     // Flattened
+  aiAnalysis?: string; // Flattened
+  content?: string;
   date: string;
   type: 'insight' | 'brief';
   readTime: string;

@@ -30,10 +30,10 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
   // AI Typewriter Effect
   const [displayedAnalysis, setDisplayedAnalysis] = useState('');
   useEffect(() => {
-    if (post?.aiAnalysis?.[lang]) {
+    if (post?.aiAnalysis) {
         setDisplayedAnalysis('');
         let i = 0;
-        const text = post.aiAnalysis[lang];
+        const text = post.aiAnalysis;
         const timer = setInterval(() => {
             if (i < text.length) {
                 setDisplayedAnalysis(prev => prev + text.charAt(i));
@@ -132,7 +132,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                 </div>
 
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-8 leading-tight">
-                  {post.title[lang]}
+                  {post.title}
                 </h1>
 
                 {/* AI Analysis Block */}

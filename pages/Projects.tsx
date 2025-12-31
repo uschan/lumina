@@ -34,7 +34,7 @@ const Projects: React.FC<ProjectsProps> = ({ projects, lang }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project, index) => (
             <div key={project.id} className="h-[420px]">
-              <ProjectCard project={project} lang={lang} index={index} />
+              <ProjectCard project={project} index={index} />
             </div>
           ))}
         </div>

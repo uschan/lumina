@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Github, Twitter, Instagram, Cloud, Sparkles, Lock, Radio, ExternalLink } from 'lucide-react';
+import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Radio, ExternalLink } from 'lucide-react';
 import { BentoContainer, BentoItem } from '../components/BentoGrid';
 import ProjectCard from '../components/ProjectCard';
 import SupportWidget from '../components/SupportWidget';
-import ProfileHoverCard from '../components/ProfileHoverCard'; // Import Hover Card
 import SEO from '../components/SEO';
 import { Language, Translation, Project, Post, ToolItem } from '../types';
+import { SOCIAL_LINKS } from '../config';
 
 interface HomeProps {
   lang: Language;
@@ -79,9 +79,7 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
           
           <div className="max-w-xl text-lg md:text-xl text-muted-foreground font-light leading-relaxed">
             <div className="mb-2 flex items-center justify-center gap-2">
-              <ProfileHoverCard>
-                 <span className="flex items-center gap-1.5">🧑‍💻 Lumina</span>
-              </ProfileHoverCard>
+                 <span className="flex items-center gap-1.5 font-semibold text-foreground">🧑‍💻 Lumina</span>
             </div>
             <p>{t.hero.description}</p>
           </div>
@@ -110,7 +108,7 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
              {featuredProjects.slice(0, 3).map((project, idx) => (
                 <div key={project.id} className="h-[400px]">
-                  <ProjectCard project={project} lang={lang} index={idx} />
+                  <ProjectCard project={project} index={idx} />
                 </div>
              ))}
           </div>
@@ -147,11 +145,11 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
                    </div>
                    
                    <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-indigo-500 transition-colors">
-                     {post.title[lang]}
+                     {post.title}
                    </h3>
                    
                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4 flex-grow">
-                     {post.excerpt[lang]}
+                     {post.excerpt}
                    </p>
 
                    <div className="flex items-center text-indigo-500 font-medium text-xs uppercase tracking-wider group-hover:translate-x-1 transition-transform pt-4 border-t border-border/30">
@@ -204,19 +202,21 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
                 </p>
               </div>
               <div className="mt-6 md:mt-0 flex flex-col items-end gap-4">
-                 <div className="flex gap-4">
-                    <SocialButton href="https://x.com/uschan" icon={<Twitter size={20} />} label="X" />
-                    <SocialButton href="https://github.com/uschan" icon={<Github size={20} />} label="GitHub" />
-                    <SocialButton href="https://bsky.app/profile/wildsalt.bsky.social" icon={<Cloud size={20} />} label="Bluesky" />
-                    <SocialButton href="https://wildsalt.me/" icon={<Sparkles size={20} />} label="WildSalt" />
-                    {/* CMS Entry Point */}
-                    <a 
-                      href="/admin/index.html" 
-                      className="p-3 rounded-full bg-background border border-border text-muted-foreground hover:text-indigo-500 hover:border-indigo-500 transition-all hover:scale-110 active:scale-95"
-                      title="System Admin"
-                    >
-                      <Lock size={20} />
-                    </a>
+                 <div className="flex items-center gap-1.5 p-2 rounded-full border border-border/40 bg-background/50 backdrop-blur-md shadow-sm">
+                    {SOCIAL_LINKS.map(link => (
+                        <React.Fragment key={link.id}>
+                             {link.id === 'wildsalt' && <div className="w-px h-3 bg-border mx-1" />}
+                             <a
+                                href={link.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={link.label}
+                                className={`p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all hover:scale-110 ${link.activeColor ? `hover:${link.activeColor}` : ''}`}
+                             >
+                                <link.icon size={16} />
+                             </a>
+                        </React.Fragment>
+                    ))}
                  </div>
                  <div className="w-full">
                     <SupportWidget compact />
@@ -253,17 +253,5 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
     </div>
   );
 };
-
-const SocialButton = ({ icon, href, label }: { icon: React.ReactNode, href: string, label: string }) => (
-  <a 
-    href={href} 
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label={label}
-    className="p-3 rounded-full bg-background border border-border text-muted-foreground hover:text-foreground hover:border-indigo-500 transition-all hover:scale-110 active:scale-95"
-  >
-    {icon}
-  </a>
-);
 
 export default Home;

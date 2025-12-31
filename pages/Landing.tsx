@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Terminal, Wifi, Cpu, Globe, Twitter, Github, Instagram, Cloud, CreditCard, Gamepad2, Sparkles, Languages } from 'lucide-react';
+import { ArrowRight, Terminal, Wifi, Cpu, Globe, Languages } from 'lucide-react';
 import { Language } from '../types';
+import { SOCIAL_LINKS } from '../config';
 
 interface LandingProps {
   lang: Language;
@@ -195,14 +196,17 @@ const Landing: React.FC<LandingProps> = ({ lang, toggleLang }) => {
             
             {/* Social Media Dock - Scaled down on Mobile */}
             <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 bg-black/50 px-3 py-2 rounded-full border border-white/5 backdrop-blur-sm shadow-xl scale-90 sm:scale-100 origin-bottom">
-               <SocialIcon href="https://x.com/uschan" icon={<Twitter size={14} />} label="X (Twitter)" />
-               <SocialIcon href="https://github.com/uschan" icon={<Github size={14} />} label="GitHub" />
-               <SocialIcon href="https://www.instagram.com/bujjun" icon={<Instagram size={14} />} label="Instagram" />
-               <SocialIcon href="https://bsky.app/profile/wildsalt.bsky.social" icon={<Cloud size={14} />} label="Bluesky" />
-               <SocialIcon href="https://discord.gg/26nJEhq6Yj" icon={<Gamepad2 size={14} />} label="Discord" />
-               <SocialIcon href="https://paypal.me/wildsaltme?utm_source=wildsalt.me" icon={<CreditCard size={14} />} label="PayPal" />
-               <div className="w-px h-3 bg-white/10 mx-1" />
-               <SocialIcon href="https://wildsalt.me/" icon={<Sparkles size={14} />} label="WildSalt" activeColor="text-amber-400" />
+               {SOCIAL_LINKS.map((link) => (
+                 <React.Fragment key={link.id}>
+                    {link.id === 'wildsalt' && <div className="w-px h-3 bg-white/10 mx-1" />}
+                    <SocialIcon 
+                      href={link.href} 
+                      icon={<link.icon size={14} />} 
+                      label={link.label} 
+                      activeColor={link.activeColor} 
+                    />
+                 </React.Fragment>
+               ))}
             </div>
 
             {/* Status Indicators & Language Toggle - Compact on Mobile */}

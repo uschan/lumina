@@ -50,7 +50,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ lang, toggleTheme, toggleLang
   );
 
   const filteredPosts = posts.filter(p => 
-    p.title[lang].toLowerCase().includes(query.toLowerCase())
+    p.title.toLowerCase().includes(query.toLowerCase())
   );
 
   const handleSelect = (path: string) => {
@@ -156,7 +156,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ lang, toggleTheme, toggleLang
                      <CommandItem 
                         key={post.id}
                         icon={<FileText size={16} />} 
-                        label={post.title[lang]}
+                        label={post.title}
                         desc={post.date}
                         onClick={() => handleSelect(`/insights/${post.id}`)} 
                       />

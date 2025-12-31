@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Navigation from './components/Navigation';
 import ErrorBoundary from './components/ErrorBoundary';
 import CommandMenu from './components/CommandMenu';
@@ -21,6 +22,11 @@ const ProjectDetail = React.lazy(() => import('./pages/ProjectDetail'));
 const Insights = React.lazy(() => import('./pages/Insights'));
 const BlogPost = React.lazy(() => import('./pages/BlogPost'));
 const Tools = React.lazy(() => import('./pages/Tools'));
+// Admin / Nexus
+const Nexus = React.lazy(() => import('./pages/Nexus'));
+
+// Initialize Query Client
+const queryClient = new QueryClient();
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -71,8 +77,10 @@ const AppContent: React.FC<{
 }> = ({ lang, theme, toggleTheme, toggleLang, t }) => {
   const location = useLocation();
   const isLanding = location.pathname === '/';
+  const isNexus = location.pathname === '/nexus';
 
   // Initial State: Use fallback content service BUT map icons immediately
+  // TODO: Replace with React Query fetch from Supabase in Phase 2
   const [content] = useState<{
     projects: Project[];
     posts: Post[];
@@ -118,7 +126,7 @@ const AppContent: React.FC<{
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-500 flex flex-col">
-      {!isLanding && (
+      {!isLanding && !isNexus && (
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
           {theme === 'dark' ? (
             <Starfield className="opacity-100 transition-opacity duration-1000" />
@@ -128,7 +136,7 @@ const AppContent: React.FC<{
         </div>
       )}
 
-      {!isLanding && (
+      {!isLanding && !isNexus && (
         <>
           <CommandMenu 
             lang={lang} 
@@ -170,13 +178,16 @@ const AppContent: React.FC<{
                 <Route path="/insights" element={<Insights posts={posts} lang={lang} />} />
                 <Route path="/insights/:id" element={<BlogPost lang={lang} posts={posts} />} />
                 <Route path="/tools" element={<Tools tools={tools} lang={lang} />} />
+                
+                {/* Hidden Admin Route */}
+                <Route path="/nexus" element={<Nexus />} />
               </Routes>
             </AnimatePresence>
           </Suspense>
         </ErrorBoundary>
       </main>
 
-      {!isLanding && (
+      {!isLanding && !isNexus && (
         <>
           <BackToTop />
           <footer className="relative z-10 py-4 border-t border-gray-200 dark:border-zinc-900 mt-4 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm transition-colors duration-500">
@@ -229,10 +240,12 @@ const App: React.FC = () => {
 
   return (
     <HelmetProvider>
-      <HashRouter>
-        <ScrollToTop />
-        <AppContent lang={lang} theme={theme} toggleTheme={toggleTheme} toggleLang={toggleLang} t={t} />
-      </HashRouter>
+      <QueryClientProvider client={queryClient}>
+        <HashRouter>
+          <ScrollToTop />
+          <AppContent lang={lang} theme={theme} toggleTheme={toggleTheme} toggleLang={toggleLang} t={t} />
+        </HashRouter>
+      </QueryClientProvider>
     </HelmetProvider>
   );
 };

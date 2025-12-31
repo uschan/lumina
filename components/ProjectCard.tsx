@@ -1,17 +1,17 @@
 import React, { useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Cpu, Github, ExternalLink } from 'lucide-react';
-import { Project, Language } from '../types';
+import { Project } from '../types';
 import { Link } from 'react-router-dom';
 import ImageWithSkeleton from './ImageWithSkeleton';
 
 interface ProjectCardProps {
   project: Project;
-  lang: Language;
   index: number;
+  lang?: string; // Optional or deprecated, keeping interface compatible for now
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, lang, index }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
   const [isHovered, setIsHovered] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   
@@ -79,7 +79,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, lang, index }) => {
                 <div className="animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent absolute inset-0 -skew-x-12 translate-x-[-100%]" />
                 <p>{`> initializing module: ${project.title}`}</p>
                 <p>{`> loading gemini model context...`}</p>
-                <p className="mt-2 text-indigo-300">{`// ${project.description.en.substring(0, 50)}...`}</p>
+                <p className="mt-2 text-indigo-300">{`// ${project.description.substring(0, 50)}...`}</p>
              </div>
           </div>
         </Link>
@@ -114,7 +114,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, lang, index }) => {
           </Link>
 
           <p className="mt-2 text-sm text-muted-foreground line-clamp-2 leading-relaxed flex-grow">
-            {project.description[lang]}
+            {project.description}
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2">

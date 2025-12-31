@@ -22,7 +22,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
 
   return (
     <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6">
-      <SEO title={project.title} description={project.description[lang]} lang={lang} />
+      <SEO title={project.title} description={project.description} lang={lang} />
       
       {/* Background is now global in App.tsx */}
 
@@ -51,7 +51,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                {project.title}
              </h1>
              <p className="text-xl text-muted-foreground font-light leading-relaxed mb-8">
-               {project.description[lang]}
+               {project.description}
              </p>
              <div className="flex gap-4">
                 {project.links.github && (
@@ -98,7 +98,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                    <h2 className="text-2xl font-bold">{lang === 'en' ? 'The Challenge' : '挑战'}</h2>
                 </div>
                 <p className="text-muted-foreground leading-relaxed text-lg mb-8">
-                  {project.challenge[lang]}
+                  {project.challenge}
                 </p>
 
                 <div className="w-full h-px bg-border/50 mb-8" />
@@ -108,7 +108,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                    <h2 className="text-2xl font-bold">{lang === 'en' ? 'The Solution' : '解决方案'}</h2>
                 </div>
                 <p className="text-muted-foreground leading-relaxed text-lg">
-                  {project.solution?.[lang]}
+                  {project.solution}
                 </p>
               </motion.section>
             )}
