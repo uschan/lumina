@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Radio, Link } from 'lucide-react';
+import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Radio, ExternalLink, Link2 } from 'lucide-react';
 import { BentoContainer, BentoItem } from '../components/BentoGrid';
 import ProjectCard from '../components/ProjectCard';
 import SupportWidget from '../components/SupportWidget';
@@ -182,7 +182,7 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
                       <div className="group h-full flex flex-col gap-3 p-4 rounded-2xl border border-border/40 bg-card/20 backdrop-blur-sm hover:border-indigo-500/30 transition-colors relative">
                         {tool.url && (
                             <div className="absolute bottom-3 right-3 text-Amber-500 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
-                                <Link size={16}/>
+                                <Link2 size={16}/>
                             </div>
                         )}
                         <div className="flex items-center justify-between">
