@@ -4,7 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Language, Post } from '../types';
 import { 
   ArrowLeft, Clock, Calendar, List, Share2, FileText, Check, 
-  X, Twitter, Facebook, Linkedin, Link2, Globe 
+  X, Twitter, Facebook, Linkedin, Link2, Globe, Hash
 } from 'lucide-react';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -16,7 +16,30 @@ interface BlogPostProps {
   posts: Post[];
 }
 
-// Weibo Icon Component (Since Lucide doesn't have it)
+// Helper: Recursively extract text from React children
+const extractText = (node: any): string => {
+  if (!node) return '';
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (node.props && node.props.children) return extractText(node.props.children);
+  return '';
+};
+
+// Helper: Generate ID from text (Chinese friendly)
+const generateId = (text: string) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')           // Replace spaces with -
+    .replace(/[^\w\u4e00-\u9fa5\-]+/g, '') // Keep English, Numbers, Chinese, Hyphens. Strip others.
+    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+    .replace(/^-+/, '')             // Trim - from start
+    .replace(/-+$/, '');            // Trim - from end
+};
+
+// Weibo Icon Component
 const WeiboIcon = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
   <svg 
     width={size} 
@@ -91,18 +114,36 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
     return <div className="pt-32 text-center">Post not found</div>;
   }
 
-  // Simple TOC extraction logic for H2 headers
-  const toc = post.content?.match(/^## (.*$)/gm)?.map(heading => {
-     const title = heading.replace('## ', '');
-     const id = title.toLowerCase().replace(/[^\w]+/g, '-');
-     return { title, id };
+  // Parse TOC from Markdown Content
+  // We use regex to find lines starting with ##, then clean them to match the ID generation logic
+  const toc = post.content?.match(/^##\s+(.*$)/gm)?.map(heading => {
+     // Remove '## ' and any bold/italic markers from the text for display
+     const rawTitle = heading.replace(/^##\s+/, '');
+     const cleanTitle = rawTitle.replace(/[*_`]/g, ''); 
+     // Generate ID consistent with CustomH2
+     const id = generateId(cleanTitle);
+     return { title: cleanTitle, id };
   }) || [];
 
   // Custom H2 component for Markdown to add IDs
   const CustomH2 = ({ children }: any) => {
-    const text = React.Children.toArray(children).join('');
-    const id = text.toLowerCase().replace(/[^\w]+/g, '-');
-    return <h2 id={id} className="scroll-mt-32 relative group">{children}</h2>;
+    // Extract pure text from children (which might be mixed with <code>, <strong> etc)
+    const text = extractText(children);
+    const id = generateId(text);
+    
+    return (
+        <h2 id={id} className="scroll-mt-32 relative group">
+            {children}
+            {/* Hover Anchor Link */}
+            <a 
+                href={`#${id}`} 
+                className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500/50 hover:text-indigo-500 p-1 hidden lg:block"
+                aria-label={`Link to ${text}`}
+            >
+                <Hash size={16} />
+            </a>
+        </h2>
+    );
   };
 
   return (
@@ -202,7 +243,8 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                         <a 
                           key={i} 
                           href={`#${item.id}`} 
-                          className="pl-4 py-1.5 text-sm text-muted-foreground hover:text-indigo-500 hover:border-l-2 hover:border-indigo-500 border-l-2 border-transparent -ml-[1px] transition-colors block"
+                          className="pl-4 py-1.5 text-sm text-muted-foreground hover:text-indigo-500 hover:border-l-2 hover:border-indigo-500 border-l-2 border-transparent -ml-[1px] transition-colors block truncate"
+                          title={item.title}
                         >
                           {item.title}
                         </a>
