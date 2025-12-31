@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, Post } from '../types';
-import { ArrowLeft, Clock, Calendar, List, Sparkles, Share2, ThumbsUp, Heart, Rocket, FileText, Check } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, List, Share2, ThumbsUp, Heart, Rocket, FileText, Check } from 'lucide-react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import SupportWidget from '../components/SupportWidget';
@@ -26,25 +27,6 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
     damping: 30,
     restDelta: 0.001
   });
-  
-  // AI Typewriter Effect
-  const [displayedAnalysis, setDisplayedAnalysis] = useState('');
-  useEffect(() => {
-    if (post?.aiAnalysis) {
-        setDisplayedAnalysis('');
-        let i = 0;
-        const text = post.aiAnalysis;
-        const timer = setInterval(() => {
-            if (i < text.length) {
-                setDisplayedAnalysis(prev => prev + text.charAt(i));
-                i++;
-            } else {
-                clearInterval(timer);
-            }
-        }, 30);
-        return () => clearInterval(timer);
-    }
-  }, [post, lang]);
 
   // TOC Active Highlighting Logic
   useEffect(() => {
@@ -112,7 +94,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
 
        {/* Background is now global in App.tsx */}
 
-       <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-12">
+       <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12">
           
           {/* Main Content */}
           <div className="flex-1 min-w-0">
@@ -128,7 +110,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                 <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground mb-6 uppercase tracking-wider">
                   <span className="flex items-center gap-1"><Calendar size={12} /> {post.date}</span>
                   <span className="flex items-center gap-1"><Clock size={12} /> {post.readTime}</span>
-                  <span className="px-2 py-0.5 rounded border border-indigo-500/30 text-indigo-500">{post.category || post.type}</span>
+                  <span className="px-2 py-0.5 rounded border border-indigo-500/30 text-indigo-500">{post.category}</span>
                 </div>
 
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-8 leading-tight">
@@ -144,40 +126,26 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                    </div>
                 )}
 
-                {/* AI Analysis Block */}
-                {post.aiAnalysis && (
-                    <div className="mb-10 p-6 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 backdrop-blur-sm relative overflow-hidden">
-                        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-mono text-sm font-bold mb-3 uppercase tracking-wider">
-                            <Sparkles size={14} />
-                            {lang === 'en' ? 'AI Assessment' : 'AI 智能评析'}
-                        </div>
-                        <p className="text-sm md:text-base leading-relaxed font-mono text-foreground/80">
-                            {displayedAnalysis}
-                            <span className="inline-block w-2 h-4 bg-indigo-500 ml-1 animate-pulse"/>
-                        </p>
-                        <div className="absolute top-0 right-0 p-2 opacity-10">
-                            <Sparkles size={100} />
-                        </div>
+                {/* Main Content Area with Border & Styles */}
+                <div className="border border-border/50 rounded-3xl p-6 sm:p-10 bg-card/10 backdrop-blur-sm shadow-sm">
+                    <div className="prose prose-zinc dark:prose-invert prose-lg max-w-none 
+                      prose-headings:font-light prose-headings:tracking-tight 
+                      prose-p:leading-relaxed prose-p:text-muted-foreground
+                      prose-pre:bg-transparent prose-pre:border-none prose-pre:p-0
+                      ">
+                       <ReactMarkdown
+                          components={{
+                            code: CodeBlock,
+                            h2: CustomH2
+                          }}
+                       >
+                         {post.content || ''}
+                       </ReactMarkdown>
                     </div>
-                )}
-
-                <div className="prose prose-zinc dark:prose-invert prose-lg max-w-none 
-                  prose-headings:font-light prose-headings:tracking-tight 
-                  prose-p:leading-relaxed prose-p:text-muted-foreground
-                  prose-pre:bg-transparent prose-pre:border-none prose-pre:p-0
-                  ">
-                   <ReactMarkdown
-                      components={{
-                        code: CodeBlock,
-                        h2: CustomH2
-                      }}
-                   >
-                     {post.content || ''}
-                   </ReactMarkdown>
                 </div>
 
                 {/* Interaction & Share Bar */}
-                <div className="mt-16 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6">
                     <div className="flex gap-4">
                         <button onClick={() => incrementReaction('like')} className="group flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 hover:bg-indigo-500/10 hover:text-indigo-500 transition-colors">
                             <ThumbsUp size={18} className="group-active:scale-125 transition-transform" />
@@ -213,28 +181,42 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
              </motion.div>
           </div>
 
-          {/* Sidebar / TOC */}
+          {/* Sidebar / Optimized TOC */}
           <aside className="lg:w-64 shrink-0 hidden lg:block">
              <div className="sticky top-32">
-                <div className="flex items-center gap-2 mb-4 text-sm font-bold text-foreground uppercase tracking-widest">
+                <div className="flex items-center gap-2 mb-6 text-sm font-bold text-foreground uppercase tracking-widest border-b border-border/50 pb-2">
                    <List size={16} />
                    Table of Contents
                 </div>
-                <nav className="flex flex-col gap-2 border-l border-border pl-4 mb-12">
-                   {toc.length > 0 ? toc.map((item, i) => (
-                      <a 
-                        key={i} 
-                        href={`#${item.id}`} 
-                        className={`text-sm transition-colors border-l-2 -ml-[17px] pl-4 py-1
-                           ${activeId === item.id 
-                             ? 'text-indigo-500 border-indigo-500 font-medium' 
-                             : 'text-muted-foreground border-transparent hover:text-foreground'
-                           }`}
-                      >
-                        {item.title}
-                      </a>
-                   )) : (
-                     <span className="text-sm text-muted-foreground italic">No sections</span>
+                
+                {/* Timeline Styled TOC */}
+                <nav className="relative flex flex-col gap-0 mb-12 pl-2">
+                   {/* Vertical Line */}
+                   <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border/50" />
+                   
+                   {toc.length > 0 ? toc.map((item, i) => {
+                      const isActive = activeId === item.id;
+                      return (
+                        <a 
+                          key={i} 
+                          href={`#${item.id}`} 
+                          className={`
+                            relative pl-6 py-2 text-sm transition-all duration-300
+                            ${isActive 
+                              ? 'text-indigo-500 font-medium translate-x-1' 
+                              : 'text-muted-foreground hover:text-foreground'
+                            }
+                          `}
+                        >
+                          {/* Dot Indicator */}
+                          <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border flex items-center justify-center transition-colors duration-300 ${isActive ? 'border-indigo-500 bg-background' : 'border-transparent'}`}>
+                              <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${isActive ? 'bg-indigo-500' : 'bg-border'}`} />
+                          </div>
+                          {item.title}
+                        </a>
+                      );
+                   }) : (
+                     <span className="text-sm text-muted-foreground italic pl-6">No sections</span>
                    )}
                 </nav>
                 

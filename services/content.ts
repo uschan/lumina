@@ -47,7 +47,6 @@ export const PostService = {
     const { data } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
     return (data || []).map((p: any) => ({ 
         ...p, 
-        aiAnalysis: p.ai_analysis, 
         readTime: p.read_time 
     }));
   },
@@ -60,10 +59,8 @@ export const PostService = {
         excerpt: post.excerpt,
         category: post.category,
         tags: post.tags,
-        ai_analysis: post.aiAnalysis,
         content: post.content,
         date: post.date,
-        type: post.type,
         read_time: post.readTime,
         published: post.published
     };

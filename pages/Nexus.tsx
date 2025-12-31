@@ -84,7 +84,7 @@ const Nexus: React.FC = () => {
         setEditingItem({ ...item });
     } else {
         if (type === 'projects') setEditingItem({ tags: [], links: {}, featured: false });
-        if (type === 'posts') setEditingItem({ tags: [], published: true, type: 'insight' });
+        if (type === 'posts') setEditingItem({ tags: [], published: true });
         if (type === 'tools') setEditingItem({ iconName: 'Cpu' });
     }
     setIsModalOpen(true);
@@ -327,23 +327,12 @@ const Nexus: React.FC = () => {
                                     <Input label="Category" value={editingItem?.category} onChange={v => setEditingItem({...editingItem, category: v})} />
                                 </div>
                                 <Input label="Excerpt" value={editingItem?.excerpt} onChange={v => setEditingItem({...editingItem, excerpt: v})} />
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-2 gap-4">
                                     <Input label="Date" value={editingItem?.date} onChange={v => setEditingItem({...editingItem, date: v})} />
                                     <Input label="Read Time" value={editingItem?.readTime} onChange={v => setEditingItem({...editingItem, readTime: v})} />
-                                    <div className="flex flex-col gap-1">
-                                        <label className="text-xs text-gray-500 font-mono">Type</label>
-                                        <select 
-                                            value={editingItem?.type} 
-                                            onChange={e => setEditingItem({...editingItem, type: e.target.value})}
-                                            className="bg-black/30 border border-white/10 rounded-lg p-2 text-sm text-white"
-                                        >
-                                            <option value="insight">Insight</option>
-                                            <option value="brief">Brief</option>
-                                        </select>
-                                    </div>
                                 </div>
                                 <Input label="Tags" value={Array.isArray(editingItem?.tags) ? editingItem.tags.join(', ') : editingItem?.tags} onChange={v => setEditingItem({...editingItem, tags: v})} />
-                                <TextArea label="AI Analysis (Summary)" value={editingItem?.aiAnalysis} onChange={v => setEditingItem({...editingItem, aiAnalysis: v})} />
+                                {/* AI Analysis Removed */}
                                 <TextArea label="Content (Markdown)" value={editingItem?.content} onChange={v => setEditingItem({...editingItem, content: v})} height="h-64" />
                             </>
                         )}

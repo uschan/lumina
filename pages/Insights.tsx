@@ -1,7 +1,8 @@
+
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Post, Language } from '../types';
-import { Calendar, Clock, ArrowUpRight, Flag, Zap, MessageCircle, Battery, Layers, Filter, X } from 'lucide-react';
+import { Calendar, Clock, ArrowUpRight, Flag, Zap, Layers, Filter, X, Battery } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface InsightsProps {
@@ -10,7 +11,6 @@ interface InsightsProps {
 }
 
 // Map logical categories to visual styles
-// These IDs must match the 'category' field in your posts (case-sensitive or normalized)
 const CATEGORY_CONFIG: Record<string, { title: { en: string, zh: string }, desc: { en: string, zh: string }, icon: any, color: string }> = {
   'Engineering': { 
     title: { en: 'Engineering', zh: '工程技术' },

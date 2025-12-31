@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Terminal, Command, FileText, Cpu, Calendar, ArrowUpRight, Radio, ExternalLink } from 'lucide-react';
@@ -128,19 +129,15 @@ const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, fea
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {recentPosts.map((post) => (
-              <Link key={post.id} to={`/insights/${post.id}`} className="group block h-full">
+              <Link key={post.id} to={`/insights/${post.slug}`} className="group block h-full">
                 <div className="h-full flex flex-col p-6 rounded-3xl border border-border/60 bg-card/40 backdrop-blur-sm hover:border-indigo-500/30 hover:bg-card/60 transition-all duration-300">
                    <div className="flex items-center justify-between text-xs font-mono text-muted-foreground mb-4 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <Calendar size={12} />
                         <span>{post.date}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded border ${
-                        post.type === 'insight' 
-                        ? 'border-indigo-500/20 text-indigo-500 bg-indigo-500/5' 
-                        : 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5'
-                      }`}>
-                        {post.type}
+                      <span className="px-2 py-0.5 rounded border border-indigo-500/20 text-indigo-500 bg-indigo-500/5">
+                        {post.category}
                       </span>
                    </div>
                    

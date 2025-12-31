@@ -46,10 +46,8 @@ export interface Post {
   excerpt: string;
   category: string;    // Taxonomy
   tags: string[];      // Taxonomy
-  aiAnalysis?: string;
   content?: string;
   date: string;
-  type: 'insight' | 'brief';
   readTime: string;
   published?: boolean;
 }
