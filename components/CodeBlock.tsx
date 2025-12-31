@@ -13,7 +13,7 @@ interface CodeBlockProps {
 const CodeBlock: React.FC<CodeBlockProps> = ({ inline, className, children }) => {
   const [isCopied, setIsCopied] = useState(false);
   const match = /language-(\w+)/.exec(className || '');
-  // Normalize language to lowercase to handle 'Error', 'Warning' etc.
+  // Normalize language to lowercase
   const language = match ? match[1].toLowerCase() : 'text';
   const code = String(children).replace(/\n$/, '');
 
@@ -31,49 +31,42 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ inline, className, children }) =>
     );
   }
 
-  // --- Admonition / Callout Renderer ---
-  // Renders distinct alert boxes for error, warning, info, etc. instead of code blocks
-  const renderAdmonition = (title: string, icon: React.ReactNode, colorClass: string, bgClass: string, borderClass: string) => (
-    <div className={`my-6 rounded-xl border-l-4 ${borderClass} ${bgClass} p-4 flex items-start gap-4 relative overflow-hidden transition-all shadow-sm hover:shadow-md`}>
-       <div className={`shrink-0 mt-0.5 ${colorClass}`}>
-         {icon}
-       </div>
-       <div className="flex-1 min-w-0">
-          <div className={`font-bold text-sm mb-1 select-none ${colorClass} uppercase tracking-wide`}>{title}</div>
-          <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap font-sans opacity-90 prose-p:my-0">
-             {children}
-          </div>
-       </div>
+  // --- Semantic Capsule Renderer ---
+  // Renders a compact, capsule-shaped badge for specific tags (error, warning, etc.)
+  // reducing visual noise compared to full code blocks.
+  const renderCapsule = (icon: React.ReactNode, bgClass: string, textClass: string, borderClass: string) => (
+    <div className={`my-3 w-fit max-w-full flex items-center gap-2.5 px-4 py-2 rounded-full border ${bgClass} ${borderClass} ${textClass} shadow-sm`}>
+       <div className="shrink-0">{icon}</div>
+       <span className="text-sm font-medium leading-none whitespace-pre-wrap font-sans">{code}</span>
     </div>
   );
 
-  // Check language type for Admonitions
+  // Check language type for Semantic Capsules
   switch (language) {
     case 'error':
     case 'danger':
     case 'bug':
-      return renderAdmonition('Error', <XCircle size={20} />, 'text-red-500', 'bg-red-500/5 dark:bg-red-500/10 border-red-500', 'border-red-500');
+      return renderCapsule(<XCircle size={16} />, 'bg-red-500/10', 'text-red-600 dark:text-red-400', 'border-red-500/20');
     case 'warning':
     case 'warn':
-      return renderAdmonition('Warning', <AlertTriangle size={20} />, 'text-amber-500', 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500', 'border-amber-500');
+      return renderCapsule(<AlertTriangle size={16} />, 'bg-amber-500/10', 'text-amber-600 dark:text-amber-400', 'border-amber-500/20');
     case 'info':
     case 'note':
-      return renderAdmonition('Note', <Info size={20} />, 'text-blue-500', 'bg-blue-500/5 dark:bg-blue-500/10 border-blue-500', 'border-blue-500');
+      return renderCapsule(<Info size={16} />, 'bg-blue-500/10', 'text-blue-600 dark:text-blue-400', 'border-blue-500/20');
     case 'tip':
     case 'success':
     case 'done':
-      return renderAdmonition('Tip', <Lightbulb size={20} />, 'text-emerald-500', 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500', 'border-emerald-500');
+      return renderCapsule(<Lightbulb size={16} />, 'bg-emerald-500/10', 'text-emerald-600 dark:text-emerald-400', 'border-emerald-500/20');
     case 'important':
-      return renderAdmonition('Important', <AlertOctagon size={20} />, 'text-purple-500', 'bg-purple-500/5 dark:bg-purple-500/10 border-purple-500', 'border-purple-500');
+      return renderCapsule(<AlertOctagon size={16} />, 'bg-purple-500/10', 'text-purple-600 dark:text-purple-400', 'border-purple-500/20');
   }
 
   // --- Standard Code Block ---
   return (
     <div className="relative group my-6 rounded-xl overflow-hidden border border-border/50 bg-[#1e1e1e] shadow-lg">
-      {/* Compact Header - Dots removed for cleaner look as requested, or kept minimal */}
+      {/* Compact Header */}
       <div className="flex items-center justify-between px-3 py-1.5 bg-[#2d2d2d] border-b border-white/5">
         <div className="flex items-center gap-3">
-           {/* Minimal Mac-like dots */}
            <div className="flex gap-1.5 opacity-60">
              <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
              <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
@@ -95,7 +88,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ inline, className, children }) =>
         </button>
       </div>
 
-      {/* Code Area - Compact padding */}
+      {/* Code Area */}
       <div className="text-sm font-mono overflow-x-auto custom-scrollbar">
         <SyntaxHighlighter
           style={vscDarkPlus}
@@ -103,7 +96,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ inline, className, children }) =>
           PreTag="div"
           customStyle={{
             margin: 0,
-            padding: '0.75rem 1rem', // More compact padding
+            padding: '0.75rem 1rem', 
             background: 'transparent',
             fontSize: '0.85rem',
             lineHeight: '1.5',
