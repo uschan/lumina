@@ -11,7 +11,9 @@ export const ProjectService = {
     const { data } = await supabase.from('projects').select('*').order('publish_date', { ascending: false });
     return (data || []).map((p: any) => ({ 
         ...p, 
-        publishDate: p.publish_date 
+        publishDate: p.publish_date,
+        visualIdentity: p.visual_identity, // Map DB snake_case to CamelCase
+        features: p.features
     }));
   },
 
@@ -23,12 +25,15 @@ export const ProjectService = {
         title: project.title,
         description: project.description,
         content: project.content,
-        palette: project.palette,
+        palette: project.palette, // Keep legacy
         tags: project.tags,
         image: project.image,
         links: project.links,
         featured: project.featured,
-        publish_date: project.publishDate
+        publish_date: project.publishDate,
+        // New Fields
+        features: project.features,
+        visual_identity: project.visualIdentity
     };
     const { error } = await supabase.from('projects').upsert(payload);
     if (error) throw error;

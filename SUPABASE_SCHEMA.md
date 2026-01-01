@@ -16,10 +16,15 @@ create table if not exists public.projects (
   title text not null,
   description text,
   content text, -- Stores the Markdown body
-  palette text[], -- Array of color hex codes
+  palette text[], -- Array of color hex codes (Deprecated in favor of visual_identity, kept for legacy)
   tags text[], -- Array of strings
   image text, -- URL to image
   links jsonb, -- JSON object for { github: "...", demo: "..." }
+  
+  -- NEW FIELDS
+  features jsonb, -- Array of objects: [{title, description, aiModel?}]
+  visual_identity jsonb, -- Object: { layout, typography, iconography, animation, colors: [] }
+
   featured boolean default false,
   publish_date date default current_date,
   created_at timestamp with time zone default timezone('utc'::text, now())
@@ -35,7 +40,6 @@ create policy "Public projects are viewable by everyone."
 
 -- Policy: Allow public write access (INSERT/UPDATE/DELETE) for Seeding
 -- CAUTION: In a real production app with Auth, restrict this to authenticated users only.
--- For this portfolio demo, we allow it to enable the 'Seed Database' button to work.
 create policy "Enable full access for seeding" 
   on public.projects for all 
   using (true) 
@@ -102,12 +106,4 @@ create policy "Enable full access for seeding"
   on public.tools for all 
   using (true) 
   with check (true);
-
-
--- ==========================================
--- OPTIONAL: Storage Buckets (If you plan to upload images)
--- ==========================================
--- insert into storage.buckets (id, name, public) values ('images', 'images', true);
--- create policy "Public Access" on storage.objects for select using ( bucket_id = 'images' );
--- create policy "Public Upload" on storage.objects for insert with check ( bucket_id = 'images' );
 ```

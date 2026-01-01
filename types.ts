@@ -22,19 +22,39 @@ export interface Translation {
   };
 }
 
+export interface CoreFeature {
+  title: string;
+  description: string;
+  aiModel?: string; // If present, indicates AI-driven
+}
+
+export interface VisualIdentity {
+  layout?: string;
+  typography?: string;
+  iconography?: string;
+  animation?: string;
+  colors?: string[];
+}
+
 export interface Project {
   id: string;
   slug: string;        // SEO Friendly URL
   title: string;
   description: string; 
   content?: string;    // Markdown Content
-  palette?: string[];
   tags: string[];
   image: string;
   links: {
     github?: string;
     demo?: string;
   };
+  // New Fields
+  features?: CoreFeature[];
+  visualIdentity?: VisualIdentity;
+  
+  // Deprecated but kept for compatibility/migration
+  palette?: string[]; 
+  
   featured?: boolean;
   publishDate?: string;
 }

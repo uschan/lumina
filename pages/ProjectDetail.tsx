@@ -2,7 +2,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, Project } from '../types';
-import { ArrowLeft, Github, ExternalLink, Palette, Cpu, Layers } from 'lucide-react';
+import { ArrowLeft, Github, ExternalLink, Palette, Cpu, Sparkles, Layers, Type, MousePointer, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -24,22 +24,15 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
     return <div className="pt-32 text-center">Project not found</div>;
   }
 
-  // Custom H2 for Markdown in Projects
-  const CustomH2 = ({ children }: any) => {
-    return (
-      <div className="flex items-center gap-3 mt-12 mb-6 text-foreground">
-         <div className="p-2 rounded bg-indigo-500/10 text-indigo-500"><Layers size={20} /></div>
-         <h2 className="text-2xl font-bold">{children}</h2>
-      </div>
-    );
-  };
+  // Fallback for visual identity colors if using old palette field
+  const displayColors = project.visualIdentity?.colors && project.visualIdentity.colors.length > 0
+    ? project.visualIdentity.colors
+    : project.palette || [];
 
   return (
     <div className="min-h-screen pt-32 pb-12 px-4 sm:px-6">
       <SEO title={project.title} description={project.description} lang={lang} />
       
-      {/* Background is now global in App.tsx */}
-
       <div className="max-w-7xl mx-auto">
         {/* Navigation */}
         <Link to="/projects" className="inline-flex items-center text-sm text-muted-foreground hover:text-indigo-500 mb-8 transition-colors">
@@ -96,10 +89,8 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
         {/* Details Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
-          {/* Main Context (Left) */}
+          {/* Main Context (Left) - Storytelling */}
           <div className="lg:col-span-8">
-            
-            {/* Content Rendered via Markdown */}
             {project.content && (
               <motion.div 
                  initial={{ opacity: 0, y: 20 }}
@@ -109,10 +100,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
               >
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
-                    components={{
-                        code: CodeBlock,
-                        h2: CustomH2
-                    }}
+                    components={{ code: CodeBlock }}
                 >
                     {project.content}
                 </ReactMarkdown>
@@ -120,52 +108,110 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
             )}
           </div>
 
-          {/* Sidebar Specs (Right) */}
+          {/* Sidebar Specs (Right) - Redesigned */}
           <div className="lg:col-span-4 space-y-8">
              
-             {/* Tech Stack */}
+             {/* 1. Core Features Module */}
+             {project.features && project.features.length > 0 && (
+                 <motion.div 
+                   initial={{ opacity: 0, x: 20 }}
+                   whileInView={{ opacity: 1, x: 0 }}
+                   viewport={{ once: true }}
+                   className="p-6 rounded-2xl border border-border/50 bg-card/20 backdrop-blur-sm"
+                 >
+                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-5 flex items-center gap-2">
+                       <Sparkles size={12} /> Core Features
+                    </h3>
+                    <div className="space-y-6">
+                        {project.features.map((feature, idx) => (
+                            <div key={idx} className="relative group">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <h4 className="font-semibold text-foreground text-sm">{feature.title}</h4>
+                                    {feature.aiModel && (
+                                        <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-[9px] font-mono text-indigo-500">
+                                            <Sparkles size={8} />
+                                            {feature.aiModel}
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{feature.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                 </motion.div>
+             )}
+
+             {/* 2. Visual Identity Module */}
+             <motion.div 
+                 initial={{ opacity: 0, x: 20 }}
+                 whileInView={{ opacity: 1, x: 0 }}
+                 viewport={{ once: true }}
+                 transition={{ delay: 0.1 }}
+                 className="p-6 rounded-2xl border border-border/50 bg-card/20 backdrop-blur-sm"
+             >
+                <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-5 flex items-center gap-2">
+                   <Palette size={12} /> Visual Identity
+                </h3>
+                
+                {/* Color Palette - Horizontal Overlapping */}
+                {displayColors.length > 0 && (
+                    <div className="mb-6">
+                        <div className="flex items-center pl-2">
+                            {displayColors.map((color, idx) => (
+                                <div 
+                                    key={color} 
+                                    className="group relative -ml-2 first:ml-0"
+                                >
+                                    <div 
+                                        className="w-8 h-8 rounded-full border-2 border-background shadow-sm hover:scale-110 hover:z-10 transition-all cursor-pointer relative z-0" 
+                                        style={{ backgroundColor: color }}
+                                    />
+                                    {/* Tooltip */}
+                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/80 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 font-mono">
+                                        {color}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Spec Table */}
+                <div className="space-y-3">
+                    {project.visualIdentity?.layout && (
+                        <SpecRow label="Layout" icon={Layers} value={project.visualIdentity.layout} />
+                    )}
+                    {project.visualIdentity?.typography && (
+                        <SpecRow label="Typography" icon={Type} value={project.visualIdentity.typography} />
+                    )}
+                    {project.visualIdentity?.iconography && (
+                        <SpecRow label="Iconography" icon={ImageIcon} value={project.visualIdentity.iconography} />
+                    )}
+                    {project.visualIdentity?.animation && (
+                        <SpecRow label="Animation" icon={MousePointer} value={project.visualIdentity.animation} />
+                    )}
+                </div>
+             </motion.div>
+
+             {/* 3. Tech Matrix Module */}
              <motion.div 
                initial={{ opacity: 0, x: 20 }}
                whileInView={{ opacity: 1, x: 0 }}
                viewport={{ once: true }}
-               transition={{ delay: 0.1 }}
-               className="p-6 rounded-2xl border border-border/50 bg-secondary/20"
+               transition={{ delay: 0.2 }}
+               className="p-6 rounded-2xl border border-border/50 bg-card/20 backdrop-blur-sm"
              >
-                <h3 className="text-sm font-mono text-muted-foreground uppercase tracking-wider mb-4">Tech Matrix</h3>
+                <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <Cpu size={12} /> Tech Matrix
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {project.tags.map(tag => (
-                    <span key={tag} className="px-3 py-1.5 rounded-md bg-background border border-border text-sm font-medium">
+                    <span key={tag} className="px-2.5 py-1 rounded-md bg-secondary/50 border border-border/50 text-xs font-medium text-secondary-foreground">
                       {tag}
                     </span>
                   ))}
                 </div>
              </motion.div>
-
-             {/* Visual Guidelines */}
-             {project.palette && (
-               <motion.div 
-                 initial={{ opacity: 0, x: 20 }}
-                 whileInView={{ opacity: 1, x: 0 }}
-                 viewport={{ once: true }}
-                 transition={{ delay: 0.2 }}
-                 className="p-6 rounded-2xl border border-border/50 bg-secondary/20"
-               >
-                  <div className="flex items-center gap-2 mb-4">
-                    <Palette size={16} className="text-muted-foreground" />
-                    <h3 className="text-sm font-mono text-muted-foreground uppercase tracking-wider">Visual Identity</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {project.palette.map((color) => (
-                      <div key={color} className="flex items-center gap-3 group cursor-pointer" onClick={() => navigator.clipboard.writeText(color)}>
-                        <div className="w-6 h-6 rounded-full shadow-sm border border-border/50" style={{ backgroundColor: color }} />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-mono font-medium text-foreground">{color}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-               </motion.div>
-             )}
 
              {/* Support */}
              <motion.div
@@ -182,5 +228,15 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
     </div>
   );
 };
+
+const SpecRow = ({ label, icon: Icon, value }: { label: string, icon: any, value: string }) => (
+    <div className="flex items-start justify-between text-xs py-1 border-b border-border/30 last:border-0">
+        <div className="flex items-center gap-2 text-muted-foreground min-w-[100px]">
+            <Icon size={12} className="opacity-70" />
+            <span>{label}</span>
+        </div>
+        <div className="text-right text-foreground font-medium max-w-[150px] leading-tight">{value}</div>
+    </div>
+);
 
 export default ProjectDetail;

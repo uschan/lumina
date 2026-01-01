@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { ProjectService, PostService, ToolService } from '../services/content';
-import { Project, Post, ToolItem } from '../types';
+import { Project, Post, ToolItem, CoreFeature } from '../types';
 import { 
   ShieldCheck, Lock, LayoutDashboard, FileText, Cpu,
-  Plus, Trash2, Edit3, RefreshCw, X, LogOut, Check
+  Plus, Trash2, Edit3, RefreshCw, X, LogOut, Check, Sparkles, Palette
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,6 +30,10 @@ const Nexus: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [editType, setEditType] = useState<TabType>('projects');
+
+  // Temp state for adding a new Feature inside the modal
+  const [newFeature, setNewFeature] = useState<CoreFeature>({ title: '', description: '', aiModel: '' });
+  const [isAiDriven, setIsAiDriven] = useState(false);
 
   useEffect(() => {
     // Check session
@@ -79,15 +83,47 @@ const Nexus: React.FC = () => {
 
   const openEditor = (type: TabType, item?: any) => {
     setEditType(type);
-    // Initialize default structure based on type
+    setNewFeature({ title: '', description: '', aiModel: '' });
+    setIsAiDriven(false);
+
     if (item) {
-        setEditingItem({ ...item });
+        // Deep copy to avoid mutating state directly before save
+        setEditingItem(JSON.parse(JSON.stringify(item)));
     } else {
-        if (type === 'projects') setEditingItem({ tags: [], links: {}, featured: false });
+        if (type === 'projects') {
+            setEditingItem({ 
+                tags: [], 
+                links: {}, 
+                featured: false, 
+                features: [], 
+                visualIdentity: { colors: [] } 
+            });
+        }
         if (type === 'posts') setEditingItem({ tags: [], published: true });
         if (type === 'tools') setEditingItem({ iconName: 'Cpu' });
     }
     setIsModalOpen(true);
+  };
+
+  const handleAddFeature = () => {
+      if (!newFeature.title) return;
+      
+      const featureToAdd = { ...newFeature };
+      if (!isAiDriven) delete featureToAdd.aiModel;
+
+      const currentFeatures = editingItem.features || [];
+      setEditingItem({
+          ...editingItem,
+          features: [...currentFeatures, featureToAdd]
+      });
+      setNewFeature({ title: '', description: '', aiModel: '' });
+      setIsAiDriven(false);
+  };
+
+  const removeFeature = (idx: number) => {
+      const currentFeatures = [...(editingItem.features || [])];
+      currentFeatures.splice(idx, 1);
+      setEditingItem({ ...editingItem, features: currentFeatures });
   };
 
   const handleSaveItem = async () => {
@@ -97,7 +133,14 @@ const Nexus: React.FC = () => {
         if (editType === 'projects') {
             await ProjectService.upsert({
                 ...editingItem,
-                tags: typeof editingItem.tags === 'string' ? editingItem.tags.split(',').map((t:string)=>t.trim()) : editingItem.tags
+                tags: typeof editingItem.tags === 'string' ? editingItem.tags.split(',').map((t:string)=>t.trim()) : editingItem.tags,
+                // Ensure visualIdentity colors are array if user typed string
+                visualIdentity: {
+                    ...editingItem.visualIdentity,
+                    colors: typeof editingItem.visualIdentity?.colors === 'string' 
+                        ? editingItem.visualIdentity.colors.split(',').map((c: string) => c.trim())
+                        : editingItem.visualIdentity?.colors || []
+                }
             });
         } else if (editType === 'posts') {
             await PostService.upsert({
@@ -175,7 +218,7 @@ const Nexus: React.FC = () => {
       <div className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/10 h-16 flex items-center justify-between px-6">
          <div className="flex items-center gap-3">
              <ShieldCheck className="text-indigo-500" />
-             <span className="font-bold tracking-tight">NEXUS <span className="text-gray-600 font-normal">v2.0</span></span>
+             <span className="font-bold tracking-tight">NEXUS <span className="text-gray-600 font-normal">v2.1</span></span>
              {isLoading && <RefreshCw className="animate-spin text-gray-500 ml-2" size={14} />}
          </div>
          <button onClick={handleLogout} className="text-xs font-mono text-gray-500 hover:text-white flex items-center gap-2">
@@ -281,7 +324,7 @@ const Nexus: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="w-full max-w-2xl bg-[#111] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+                    className="w-full max-w-3xl bg-[#111] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
                 >
                     <div className="flex justify-between items-center p-4 border-b border-white/10 bg-white/5">
                         <div className="flex items-center gap-2">
@@ -296,6 +339,7 @@ const Nexus: React.FC = () => {
                         {/* PROJECT FIELDS */}
                         {editType === 'projects' && (
                             <>
+                                <SectionHeader label="Basic Info" />
                                 <div className="grid grid-cols-2 gap-4">
                                     <Input label="Title" value={editingItem?.title} onChange={v => setEditingItem({...editingItem, title: v})} />
                                     <Input label="Slug (URL)" value={editingItem?.slug} onChange={v => setEditingItem({...editingItem, slug: v})} />
@@ -310,10 +354,104 @@ const Nexus: React.FC = () => {
                                     <Input label="Demo URL" value={editingItem?.links?.demo} onChange={v => setEditingItem({...editingItem, links: {...editingItem.links, demo: v}})} />
                                 </div>
                                 <Input label="Tags (comma separated)" value={Array.isArray(editingItem?.tags) ? editingItem.tags.join(', ') : editingItem?.tags} onChange={v => setEditingItem({...editingItem, tags: v})} />
-                                <TextArea label="Content (Markdown)" value={editingItem?.content} onChange={v => setEditingItem({...editingItem, content: v})} />
+                                <TextArea label="Storytelling Content (Markdown)" value={editingItem?.content} onChange={v => setEditingItem({...editingItem, content: v})} height="h-48" />
+                                
                                 <div className="flex items-center gap-2">
                                     <input type="checkbox" checked={editingItem?.featured || false} onChange={e => setEditingItem({...editingItem, featured: e.target.checked})} />
                                     <label className="text-sm text-gray-400">Featured Project</label>
+                                </div>
+
+                                {/* --- CORE FEATURES BUILDER --- */}
+                                <div className="border-t border-white/10 pt-4 mt-2">
+                                    <SectionHeader label="Core Features" />
+                                    <div className="space-y-2 mb-4">
+                                        {(editingItem?.features || []).map((f: CoreFeature, idx: number) => (
+                                            <div key={idx} className="flex items-start justify-between bg-white/5 p-3 rounded-lg border border-white/5">
+                                                <div>
+                                                    <div className="text-sm font-bold text-gray-200 flex items-center gap-2">
+                                                        {f.title}
+                                                        {f.aiModel && <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-1.5 rounded flex items-center gap-1"><Sparkles size={10} /> {f.aiModel}</span>}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">{f.description}</div>
+                                                </div>
+                                                <button onClick={() => removeFeature(idx)} className="text-red-500 hover:text-red-400"><X size={14}/></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="bg-black/30 p-4 rounded-lg border border-white/10">
+                                        <div className="text-xs font-mono text-gray-500 uppercase mb-2">Add New Feature</div>
+                                        <div className="space-y-3">
+                                            <input 
+                                                className="w-full bg-black/50 border border-white/10 rounded px-2 py-1.5 text-sm text-white" 
+                                                placeholder="Feature Title"
+                                                value={newFeature.title}
+                                                onChange={e => setNewFeature({...newFeature, title: e.target.value})}
+                                            />
+                                            <textarea 
+                                                className="w-full bg-black/50 border border-white/10 rounded px-2 py-1.5 text-sm text-white resize-none h-20" 
+                                                placeholder="Description"
+                                                value={newFeature.description}
+                                                onChange={e => setNewFeature({...newFeature, description: e.target.value})}
+                                            />
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-2">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={isAiDriven} 
+                                                        onChange={e => setIsAiDriven(e.target.checked)}
+                                                        className="accent-indigo-500"
+                                                    />
+                                                    <label className="text-xs text-gray-400">AI Driven?</label>
+                                                </div>
+                                                {isAiDriven && (
+                                                    <input 
+                                                        className="flex-1 bg-black/50 border border-indigo-500/30 rounded px-2 py-1.5 text-sm text-white placeholder:text-gray-600" 
+                                                        placeholder="Model Name (e.g. Gemini 3 Flash)"
+                                                        value={newFeature.aiModel || ''}
+                                                        onChange={e => setNewFeature({...newFeature, aiModel: e.target.value})}
+                                                    />
+                                                )}
+                                            </div>
+                                            <button onClick={handleAddFeature} className="w-full bg-white/10 hover:bg-white/20 text-xs py-2 rounded text-gray-300 font-bold uppercase transition-colors">
+                                                + Add Feature
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* --- VISUAL IDENTITY --- */}
+                                <div className="border-t border-white/10 pt-4 mt-2">
+                                    <SectionHeader label="Visual Identity" />
+                                    <Input 
+                                        label="Colors (HEX, comma separated)" 
+                                        value={Array.isArray(editingItem?.visualIdentity?.colors) ? editingItem.visualIdentity.colors.join(', ') : (editingItem?.visualIdentity?.colors || '')} 
+                                        onChange={v => setEditingItem({
+                                            ...editingItem, 
+                                            visualIdentity: { ...editingItem.visualIdentity, colors: v }
+                                        })} 
+                                    />
+                                    <div className="grid grid-cols-2 gap-4 mt-4">
+                                         <Input 
+                                            label="Layout" 
+                                            value={editingItem?.visualIdentity?.layout} 
+                                            onChange={v => setEditingItem({...editingItem, visualIdentity: {...editingItem.visualIdentity, layout: v}})}
+                                         />
+                                         <Input 
+                                            label="Typography" 
+                                            value={editingItem?.visualIdentity?.typography} 
+                                            onChange={v => setEditingItem({...editingItem, visualIdentity: {...editingItem.visualIdentity, typography: v}})}
+                                         />
+                                         <Input 
+                                            label="Iconography" 
+                                            value={editingItem?.visualIdentity?.iconography} 
+                                            onChange={v => setEditingItem({...editingItem, visualIdentity: {...editingItem.visualIdentity, iconography: v}})}
+                                         />
+                                         <Input 
+                                            label="Animation" 
+                                            value={editingItem?.visualIdentity?.animation} 
+                                            onChange={v => setEditingItem({...editingItem, visualIdentity: {...editingItem.visualIdentity, animation: v}})}
+                                         />
+                                    </div>
                                 </div>
                             </>
                         )}
@@ -332,7 +470,6 @@ const Nexus: React.FC = () => {
                                     <Input label="Read Time" value={editingItem?.readTime} onChange={v => setEditingItem({...editingItem, readTime: v})} />
                                 </div>
                                 <Input label="Tags" value={Array.isArray(editingItem?.tags) ? editingItem.tags.join(', ') : editingItem?.tags} onChange={v => setEditingItem({...editingItem, tags: v})} />
-                                {/* AI Analysis Removed */}
                                 <TextArea label="Content (Markdown)" value={editingItem?.content} onChange={v => setEditingItem({...editingItem, content: v})} height="h-64" />
                             </>
                         )}
@@ -368,6 +505,14 @@ const Nexus: React.FC = () => {
 };
 
 // --- SUB COMPONENTS ---
+
+const SectionHeader = ({ label }: { label: string }) => (
+    <div className="flex items-center gap-2 mb-3">
+        <div className="h-px bg-white/10 flex-1" />
+        <span className="text-xs font-mono text-gray-400 uppercase tracking-widest">{label}</span>
+        <div className="h-px bg-white/10 flex-1" />
+    </div>
+);
 
 const TabButton = ({ active, onClick, icon, label }: any) => (
     <button 
