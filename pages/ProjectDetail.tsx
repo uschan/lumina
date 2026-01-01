@@ -1,199 +1,195 @@
-
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Language, Project } from '../types';
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
-    ArrowLeft, Github, ExternalLink, Palette, Cpu, Sparkles, Layers, Type, 
-    MousePointer, Image as ImageIcon, PaintBucket, ChevronLeft, ChevronRight, 
-    Bot, User, Users
+  ArrowLeft, Github, ExternalLink, Calendar, Users, Sparkles, Bot, Palette, 
+  Layers, Type, Image as ImageIcon, MousePointer, Cpu, PaintBucket, User
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import SupportWidget from '../components/SupportWidget';
-import ImageWithSkeleton from '../components/ImageWithSkeleton';
-import SEO from '../components/SEO';
+import { Project, Language } from '../types';
 import CodeBlock from '../components/CodeBlock';
+import SupportWidget from '../components/SupportWidget';
 import { getIconForTech } from '../utils/iconMap';
+import ImageWithSkeleton from '../components/ImageWithSkeleton';
 
 interface ProjectDetailProps {
-  lang: Language;
   projects: Project[];
+  lang: Language;
 }
 
-const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
+const AvatarPlaceholder = ({ name, role, icon: Icon, color }: { name: string, role: string, icon: any, color?: string }) => (
+  <div className="group relative flex items-center gap-2 pr-3 pl-1 py-1 rounded-full bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
+    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm ${color || 'bg-zinc-700 dark:bg-zinc-600'}`}>
+        <Icon size={12} />
+    </div>
+    <div className="flex flex-col">
+        <span className="text-[10px] font-bold leading-none text-foreground">{name}</span>
+        <span className="text-[8px] text-muted-foreground leading-none">{role}</span>
+    </div>
+  </div>
+);
+
+const SpecRow = ({ label, icon: Icon, value }: { label: string, icon: any, value: string }) => (
+  <div className="flex items-center justify-between text-xs py-2 border-b border-border/30 last:border-0">
+    <div className="flex items-center gap-2 text-muted-foreground">
+        <Icon size={12} className="opacity-70" />
+        <span>{label}</span>
+    </div>
+    <div className="font-medium text-foreground text-right">{value}</div>
+  </div>
+);
+
+const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects, lang }) => {
   const { slug } = useParams<{ slug: string }>();
-  const project = projects.find(p => p.slug === slug);
-  
-  // Gallery State
-  const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  const navigate = useNavigate();
+  const [project, setProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    const found = projects.find(p => p.slug === slug);
+    if (found) {
+      setProject(found);
+    } 
+  }, [slug, projects, navigate]);
 
   if (!project) {
-    return <div className="pt-32 text-center">Project not found</div>;
+    return (
+      <div className="min-h-screen pt-32 flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+           <div className="w-12 h-12 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+           <p className="text-xs font-mono text-muted-foreground">Initializing Module...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Handle Gallery
-  const hasGallery = project.gallery && project.gallery.length > 0;
-  const images = hasGallery ? [project.image, ...project.gallery!] : [project.image];
-  
-  const nextImage = () => setCurrentImageIdx((prev) => (prev + 1) % images.length);
-  const prevImage = () => setCurrentImageIdx((prev) => (prev - 1 + images.length) % images.length);
-
-  // Fallback for colors
-  const displayColors = project.visualIdentity?.colors && project.visualIdentity.colors.length > 0
-    ? project.visualIdentity.colors
-    : project.palette || [];
+  const displayColors = project.visualIdentity?.colors || project.palette || [];
 
   return (
-    <div className="min-h-screen pt-32 pb-12 px-4 sm:px-6">
-      <SEO title={project.title} description={project.description} lang={lang} />
-      
+    <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
+        
         {/* Navigation */}
-        <Link to="/projects" className="inline-flex items-center text-sm text-muted-foreground hover:text-indigo-500 mb-8 transition-colors">
-          <ArrowLeft size={16} className="mr-2" />
-          {lang === 'en' ? 'Back to Experiments' : '返回实验列表'}
+        <Link to="/projects" className="inline-flex items-center text-sm text-muted-foreground hover:text-indigo-500 mb-8 transition-colors group">
+          <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
+          {lang === 'en' ? 'Return to Laboratory' : '返回实验室'}
         </Link>
 
-        {/* Hero / Gallery Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12"
-        >
-          {/* Header Info */}
-          <div className="order-2 lg:order-1 flex flex-col justify-center">
-             <div className="flex items-center gap-2 text-indigo-500 font-mono text-sm mb-4">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+        {/* Hero Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="order-2 lg:order-1 flex flex-col justify-center"
+          >
+             <div className="flex items-center gap-3 mb-6">
+                <span className="px-2 py-0.5 rounded border border-indigo-500/20 text-indigo-500 bg-indigo-500/5 text-[10px] font-mono uppercase tracking-widest">
+                  Experiment {project.id.substring(0,4)}
                 </span>
-                V.1.0 STABLE
+                {project.publishDate && (
+                  <span className="text-xs text-muted-foreground font-mono flex items-center gap-1">
+                    <Calendar size={12} /> {project.publishDate}
+                  </span>
+                )}
              </div>
-             <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground mb-6">
+
+             <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground mb-6">
                {project.title}
              </h1>
-             <p className="text-sm md:text-lg text-muted-foreground font-light leading-relaxed mb-8">
+             
+             <p className="text-lg text-muted-foreground leading-relaxed mb-8 font-light border-l-2 border-indigo-500/20 pl-6">
                {project.description}
              </p>
-             <div className="flex gap-4">
-                {project.links.github && (
-                  <a href={project.links.github} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-6 py-3 rounded-full bg-foreground text-background font-medium hover:opacity-90 transition-opacity">
-                    <Github size={18} />
-                    GitHub
+
+             <div className="flex flex-wrap gap-4">
+                {project.links.demo && (
+                  <a href={project.links.demo} target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40">
+                    <ExternalLink size={18} />
+                    {lang === 'en' ? 'Launch Demo' : '启动演示'}
                   </a>
                 )}
-                {project.links.demo && (
-                  <a href={project.links.demo} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-6 py-3 rounded-full border border-border bg-background hover:bg-secondary/50 transition-colors">
-                    <ExternalLink size={18} />
-                    Live Demo
+                {project.links.github && (
+                  <a href={project.links.github} target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-full bg-secondary hover:bg-secondary/80 text-foreground font-medium flex items-center gap-2 transition-colors border border-border">
+                    <Github size={18} />
+                    {lang === 'en' ? 'Source Code' : '源码'}
                   </a>
                 )}
              </div>
-          </div>
+          </motion.div>
 
-          {/* Gallery Carousel */}
-          <div className="order-1 lg:order-2 relative aspect-video rounded-3xl overflow-hidden border border-border/50 bg-muted/20 group">
-             <AnimatePresence mode='wait'>
-                 <motion.div 
-                    key={currentImageIdx}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="absolute inset-0"
-                 >
-                    <ImageWithSkeleton 
-                        src={images[currentImageIdx]} 
-                        alt={project.title} 
-                        className="object-cover w-full h-full"
-                        containerClassName="w-full h-full"
-                    />
-                 </motion.div>
-             </AnimatePresence>
-             
-             {/* Gradient Overlay */}
-             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-transparent pointer-events-none" />
-
-             {/* Controls (Only if multiple images) */}
-             {images.length > 1 && (
-                 <>
-                    <button 
-                        onClick={prevImage}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-600"
-                    >
-                        <ChevronLeft size={20} />
-                    </button>
-                    <button 
-                        onClick={nextImage}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-600"
-                    >
-                        <ChevronRight size={20} />
-                    </button>
-                    
-                    {/* Dots */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                        {images.map((_, idx) => (
-                            <div 
-                                key={idx} 
-                                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentImageIdx ? 'bg-white w-3' : 'bg-white/50'}`} 
-                            />
-                        ))}
-                    </div>
-                 </>
-             )}
-          </div>
-        </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="order-1 lg:order-2"
+          >
+             <div className="relative rounded-3xl overflow-hidden border border-border/50 shadow-2xl bg-card/50 aspect-video group">
+                <ImageWithSkeleton 
+                  src={project.image} 
+                  alt={project.title} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                />
+                {/* Overlay Grid */}
+                <div className="absolute inset-0 bg-lab-grid bg-[size:20px_20px] opacity-20 pointer-events-none mix-blend-overlay" />
+             </div>
+          </motion.div>
+        </div>
 
         {/* Details Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Main Context (Left) - Storytelling & Timeline */}
-          <div className="lg:col-span-8 space-y-12">
-            {/* Markdown Content */}
-            {project.content && (
-              <motion.div 
+          <div className="lg:col-span-8 space-y-8">
+            <motion.div 
                  initial={{ opacity: 0, y: 20 }}
                  whileInView={{ opacity: 1, y: 0 }}
                  viewport={{ once: true }}
-                 className="p-8 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm prose prose-zinc dark:prose-invert max-w-none prose-img:rounded-xl prose-img:shadow-md"
-              >
-                <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{ code: CodeBlock }}
-                >
-                    {project.content}
-                </ReactMarkdown>
-              </motion.div>
-            )}
-
-            {/* Development Timeline */}
-            {project.timeline && project.timeline.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="pl-4 border-l-2 border-border/50 ml-4 space-y-8 relative"
-                >
-                    <h3 className="text-sm font-mono text-muted-foreground uppercase tracking-widest mb-6 -ml-6 pl-6 bg-background inline-block">Process Timeline</h3>
-                    {project.timeline.map((event, idx) => (
-                        <div key={idx} className="relative pl-6 group">
-                            <div className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-background border-2 border-muted-foreground/30 group-hover:border-indigo-500 transition-colors shadow-sm" />
-                            <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
-                                <span className="text-xs font-mono text-indigo-500">{event.date}</span>
-                                <h4 className="font-bold text-foreground text-sm">{event.title}</h4>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{event.description}</p>
+                 className="p-8 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm"
+            >
+                {/* 1. Development Timeline */}
+                {project.timeline && project.timeline.length > 0 && (
+                    <div className="mb-10 pb-8 border-b border-border/40">
+                        <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-6 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                            Process Timeline
+                        </h3>
+                        <div className="relative border-l border-border/50 ml-1.5 space-y-6">
+                            {project.timeline.map((event, idx) => (
+                                <div key={idx} className="relative pl-6 group">
+                                    <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-background border-2 border-muted-foreground/30 group-hover:border-indigo-500 transition-colors shadow-sm z-10" />
+                                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4">
+                                        <span className="text-xs font-mono text-indigo-500/80 min-w-[85px]">{event.date}</span>
+                                        <div>
+                                            <h4 className="font-bold text-foreground text-sm leading-tight">{event.title}</h4>
+                                            <p className="text-xs text-muted-foreground mt-1 leading-relaxed max-w-lg">{event.description}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </motion.div>
-            )}
+                    </div>
+                )}
+
+                {/* 2. Markdown Content */}
+                {project.content && (
+                    <div className="prose prose-zinc dark:prose-invert max-w-none prose-img:rounded-xl prose-img:shadow-md prose-headings:font-medium prose-p:text-muted-foreground prose-a:text-indigo-500 hover:prose-a:text-indigo-400">
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{ 
+                              code: CodeBlock as any 
+                            }}
+                        >
+                            {project.content}
+                        </ReactMarkdown>
+                    </div>
+                )}
+            </motion.div>
           </div>
 
           {/* Sidebar Specs (Right) */}
           <div className="lg:col-span-4 space-y-8">
              
-             {/* 1. Collaborators / Vibe Coding Team */}
+             {/* 1. Collaborators */}
              <motion.div
                initial={{ opacity: 0, x: 20 }}
                whileInView={{ opacity: 1, x: 0 }}
@@ -204,18 +200,23 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                     <Users size={12} /> Neural Team
                 </h3>
                 
-                {/* Default to User + Gemini if none specified, or just show defined ones */}
-                <div className="flex items-center -space-x-3 overflow-hidden py-2 pl-1">
+                <div className="flex items-center flex-wrap gap-2 py-2">
                    {(!project.collaborators || project.collaborators.length === 0) ? (
                         // Fallback Default Team
                         <>
                            <AvatarPlaceholder name="Lumina" role="Architect" icon={User} />
                            <AvatarPlaceholder name="Gemini" role="Co-Pilot" icon={Sparkles} color="bg-indigo-500" />
-                           <AvatarPlaceholder name="ChatGPT" role="Reasoning" icon={Bot} color="bg-emerald-500" />
+                           <AvatarPlaceholder name="GPT-4" role="Reasoning" icon={Bot} color="bg-emerald-500" />
                         </>
                    ) : (
                        project.collaborators.map((c, idx) => (
-                           <AvatarPlaceholder key={idx} name={c.name} role={c.role} icon={c.name.toLowerCase().includes('gemini') ? Sparkles : Bot} />
+                           <AvatarPlaceholder 
+                              key={idx} 
+                              name={c.name} 
+                              role={c.role} 
+                              icon={c.name.toLowerCase().includes('gemini') ? Sparkles : Bot} 
+                              color={c.name.toLowerCase().includes('gemini') ? 'bg-indigo-500' : undefined}
+                           />
                        ))
                    )}
                 </div>
@@ -269,7 +270,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                 
                 {/* Spec Table */}
                 <div className="space-y-3">
-                    {/* Color Palette - Right Aligned in Table Style */}
+                    {/* Color Palette */}
                     {displayColors.length > 0 && (
                         <div className="flex items-center justify-between text-xs py-1 border-b border-border/30 last:border-0">
                             <div className="flex items-center gap-2 text-muted-foreground min-w-[100px]">
@@ -277,16 +278,15 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                                 <span>Color System</span>
                             </div>
                             <div className="flex items-center justify-end pl-2">
-                                {displayColors.map((color, idx) => (
+                                {displayColors.map((color: string, idx: number) => (
                                     <div 
-                                        key={color} 
+                                        key={idx} 
                                         className="group relative -ml-2 first:ml-0"
                                     >
                                         <div 
                                             className="w-6 h-6 rounded-full border-2 border-background shadow-sm hover:scale-110 hover:z-10 transition-all cursor-pointer relative z-0" 
                                             style={{ backgroundColor: color }}
                                         />
-                                        {/* Tooltip */}
                                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/80 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 font-mono">
                                             {color}
                                         </div>
@@ -353,30 +353,5 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
     </div>
   );
 };
-
-// Helper Components
-
-const SpecRow = ({ label, icon: Icon, value }: { label: string, icon: any, value: string }) => (
-    <div className="flex items-start justify-between text-xs py-1 border-b border-border/30 last:border-0">
-        <div className="flex items-center gap-2 text-muted-foreground min-w-[100px]">
-            <Icon size={12} className="opacity-70" />
-            <span>{label}</span>
-        </div>
-        <div className="text-right text-foreground font-medium max-w-[150px] leading-tight">{value}</div>
-    </div>
-);
-
-const AvatarPlaceholder = ({ name, role, icon: Icon, color = "bg-zinc-700" }: any) => (
-    <div className="relative group cursor-pointer">
-        <div className={`w-10 h-10 rounded-full border-2 border-card flex items-center justify-center text-white shadow-sm hover:scale-110 hover:z-10 transition-all relative z-0 ${color}`}>
-            <Icon size={16} />
-        </div>
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-md px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 min-w-[100px] text-center border border-white/10">
-            <div className="text-white font-bold text-xs">{name}</div>
-            <div className="text-gray-400 text-[9px] uppercase tracking-wider">{role}</div>
-            <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-black/90 rotate-45 border-r border-b border-white/10"></div>
-        </div>
-    </div>
-);
 
 export default ProjectDetail;
