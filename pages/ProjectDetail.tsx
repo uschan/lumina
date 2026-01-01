@@ -2,7 +2,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, Project } from '../types';
-import { ArrowLeft, Github, ExternalLink, Palette, Cpu, Sparkles, Layers, Type, MousePointer, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Github, ExternalLink, Palette, Cpu, Sparkles, Layers, Type, MousePointer, Image as ImageIcon, PaintBucket } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -156,6 +156,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                 {/* Color Palette - Horizontal Overlapping */}
                 {displayColors.length > 0 && (
                     <div className="mb-6">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                            <PaintBucket size={12} className="opacity-70" />
+                            <span>Color System</span>
+                        </div>
                         <div className="flex items-center pl-2">
                             {displayColors.map((color, idx) => (
                                 <div 
