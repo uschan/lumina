@@ -106,7 +106,7 @@ const Nexus: React.FC = () => {
                 links: {}, 
                 featured: false, 
                 features: [], 
-                visualIdentity: { colors: [] },
+                visualIdentity: { colors: [], layout: '', typography: '', iconography: '', animation: '' },
                 gallery: [],
                 timeline: [],
                 collaborators: []
@@ -399,10 +399,9 @@ const Nexus: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Features & Visual Identity (Existing) */}
+                                {/* Features & Visual Identity */}
                                 <div className="border-t border-white/10 pt-4 mt-2">
                                     <SectionHeader label="Core Features" />
-                                    {/* ... Feature Builder (Abbreviated to avoid too large file, logic is same as before) ... */}
                                     <div className="space-y-2 mb-4">
                                         {(editingItem?.features || []).map((f: CoreFeature, idx: number) => (
                                             <div key={idx} className="flex items-start justify-between bg-white/5 p-3 rounded-lg border border-white/5">
@@ -423,8 +422,30 @@ const Nexus: React.FC = () => {
 
                                 <div className="border-t border-white/10 pt-4 mt-2">
                                     <SectionHeader label="Visual Identity" />
-                                    <Input label="Colors (Hex)" value={Array.isArray(editingItem?.visualIdentity?.colors) ? editingItem.visualIdentity.colors.join(', ') : (editingItem?.visualIdentity?.colors || '')} onChange={v => setEditingItem({...editingItem, visualIdentity: { ...editingItem.visualIdentity, colors: v }})} />
-                                    {/* ... Other fields ... */}
+                                    <Input label="Colors (Hex, comma separated)" value={Array.isArray(editingItem?.visualIdentity?.colors) ? editingItem.visualIdentity.colors.join(', ') : (editingItem?.visualIdentity?.colors || '')} onChange={v => setEditingItem({...editingItem, visualIdentity: { ...editingItem.visualIdentity, colors: v }})} />
+                                    
+                                    <div className="grid grid-cols-2 gap-4 mt-4">
+                                        <Input 
+                                            label="Layout Strategy" 
+                                            value={editingItem?.visualIdentity?.layout} 
+                                            onChange={v => setEditingItem({...editingItem, visualIdentity: { ...editingItem.visualIdentity, layout: v }})} 
+                                        />
+                                        <Input 
+                                            label="Typography" 
+                                            value={editingItem?.visualIdentity?.typography} 
+                                            onChange={v => setEditingItem({...editingItem, visualIdentity: { ...editingItem.visualIdentity, typography: v }})} 
+                                        />
+                                        <Input 
+                                            label="Iconography" 
+                                            value={editingItem?.visualIdentity?.iconography} 
+                                            onChange={v => setEditingItem({...editingItem, visualIdentity: { ...editingItem.visualIdentity, iconography: v }})} 
+                                        />
+                                        <Input 
+                                            label="Motion/Animation" 
+                                            value={editingItem?.visualIdentity?.animation} 
+                                            onChange={v => setEditingItem({...editingItem, visualIdentity: { ...editingItem.visualIdentity, animation: v }})} 
+                                        />
+                                    </div>
                                 </div>
                             </>
                         )}
