@@ -287,10 +287,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects, lang }) => {
                                 {displayColors.map((color: string, idx: number) => (
                                     <div 
                                         key={idx} 
-                                        className="group relative -ml-2 first:ml-0"
+                                        className="group relative -ml-1 first:ml-0"
                                     >
                                         <div 
-                                            className="w-6 h-6 rounded-full border-2 border-background shadow-sm hover:scale-110 hover:z-10 transition-all cursor-pointer relative z-0" 
+                                            className="w-8 h-8 rounded-full border-2 border-background shadow-sm hover:scale-110 hover:z-10 transition-all cursor-pointer relative z-0" 
                                             style={{ backgroundColor: color }}
                                         />
                                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/80 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 font-mono">
