@@ -19,7 +19,7 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = ({ lang, t, featuredProjects, recentPosts, featuredTools }) => {
   // Text Scramble Effect Logic
-  const TARGET_TEXT = "Lumina";
+  const TARGET_TEXT = "WildSalt";
   const CHARS = "!@#$%^&*():{};|,.<>/?";
   const [scrambledText, setScrambledText] = useState(TARGET_TEXT);
   const [isScrambling, setIsScrambling] = useState(false);
