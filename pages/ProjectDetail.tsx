@@ -35,7 +35,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6">
+    <div className="min-h-screen pt-32 pb-12 px-4 sm:px-6">
       <SEO title={project.title} description={project.description} lang={lang} />
       
       {/* Background is now global in App.tsx */}
@@ -51,7 +51,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12"
         >
           <div className="order-2 lg:order-1 flex flex-col justify-center">
              <div className="flex items-center gap-2 text-indigo-500 font-mono text-sm mb-4">
@@ -61,10 +61,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                 </span>
                 V.1.0 STABLE
              </div>
-             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6">
+             <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground mb-6">
                {project.title}
              </h1>
-             <p className="text-xl text-muted-foreground font-light leading-relaxed mb-8">
+             <p className="text-sm md:text-lg text-muted-foreground font-light leading-relaxed mb-8">
                {project.description}
              </p>
              <div className="flex gap-4">
