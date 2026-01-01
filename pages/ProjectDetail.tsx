@@ -157,10 +157,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ lang, projects }) => {
                   <div className="space-y-3">
                     {project.palette.map((color) => (
                       <div key={color} className="flex items-center gap-3 group cursor-pointer" onClick={() => navigator.clipboard.writeText(color)}>
-                        <div className="w-12 h-12 rounded-xl shadow-sm border border-border/50" style={{ backgroundColor: color }} />
+                        <div className="w-6 h-6 rounded-full shadow-sm border border-border/50" style={{ backgroundColor: color }} />
                         <div className="flex flex-col">
                           <span className="text-sm font-mono font-medium text-foreground">{color}</span>
-                          <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">Click to copy</span>
                         </div>
                       </div>
                     ))}
