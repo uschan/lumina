@@ -241,7 +241,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                     {/* Corner accents */}
                     <div className="absolute top-0 left-0 w-20 h-20 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none" />
                     
-                    <div className="prose prose-zinc dark:prose-invert prose-lg max-w-none 
+                    <div className="prose prose-zinc font-light text-sm dark:prose-invert prose-lg max-w-none 
                       prose-headings:font-light prose-headings:tracking-tight 
                       prose-p:leading-relaxed prose-p:text-muted-foreground
                       prose-a:text-indigo-500 prose-a:no-underline hover:prose-a:underline

@@ -177,7 +177,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects, lang }) => {
 
                 {/* 2. Markdown Content */}
                 {project.content && (
-                    <div className="prose prose-zinc dark:prose-invert max-w-none prose-img:rounded-xl prose-img:shadow-md prose-headings:font-medium prose-p:text-muted-foreground prose-a:text-indigo-500 hover:prose-a:text-indigo-400">
+                    <div className="prose prose-zinc font-light text-sm dark:prose-invert max-w-none prose-img:rounded-xl prose-img:shadow-md prose-headings:font-medium prose-p:text-muted-foreground prose-a:text-indigo-500 hover:prose-a:text-indigo-400">
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{ 
