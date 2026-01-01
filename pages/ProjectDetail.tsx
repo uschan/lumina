@@ -19,13 +19,18 @@ interface ProjectDetailProps {
 }
 
 const AvatarPlaceholder = ({ name, role, icon: Icon, color }: { name: string, role: string, icon: any, color?: string }) => (
-  <div className="group relative flex items-center gap-2 pr-3 pl-1 py-1 rounded-full bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
+  <div className="group relative flex items-center gap-2 pr-3 pl-1 py-1 rounded-full bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors cursor-help">
     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm ${color || 'bg-zinc-700 dark:bg-zinc-600'}`}>
         <Icon size={12} />
     </div>
     <div className="flex flex-col">
         <span className="text-[10px] font-bold leading-none text-foreground">{name}</span>
         <span className="text-[8px] text-muted-foreground leading-none">{role}</span>
+    </div>
+    
+    {/* Tooltip - Absolute position needs z-index and no parent overflow clipping */}
+    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/90 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+        {name} • {role}
     </div>
   </div>
 );
@@ -146,7 +151,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects, lang }) => {
                  viewport={{ once: true }}
                  className="p-8 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm"
             >
-                {/* 1. Development Timeline */}
+                {/* 1. Development Timeline (Compact, Top of Content) */}
                 {project.timeline && project.timeline.length > 0 && (
                     <div className="mb-10 pb-8 border-b border-border/40">
                         <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -189,18 +194,19 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects, lang }) => {
           {/* Sidebar Specs (Right) */}
           <div className="lg:col-span-4 space-y-8">
              
-             {/* 1. Collaborators */}
+             {/* 1. Collaborators / Vibe Coding Team */}
              <motion.div
                initial={{ opacity: 0, x: 20 }}
                whileInView={{ opacity: 1, x: 0 }}
                viewport={{ once: true }}
-               className="p-6 rounded-2xl border border-border/50 bg-card/20 backdrop-blur-sm"
+               // Removed overflow-hidden here to allow tooltips to show
+               className="p-6 rounded-2xl border border-border/50 bg-card/20 backdrop-blur-sm relative z-10"
              >
                 <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-5 flex items-center gap-2">
                     <Users size={12} /> Neural Team
                 </h3>
                 
-                <div className="flex items-center flex-wrap gap-2 py-2">
+                <div className="flex items-center flex-wrap gap-2 py-2 relative">
                    {(!project.collaborators || project.collaborators.length === 0) ? (
                         // Fallback Default Team
                         <>
@@ -262,7 +268,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects, lang }) => {
                  whileInView={{ opacity: 1, x: 0 }}
                  viewport={{ once: true }}
                  transition={{ delay: 0.2 }}
-                 className="p-6 rounded-2xl border border-border/50 bg-card/20 backdrop-blur-sm"
+                 className="p-6 rounded-2xl border border-border/50 bg-card/20 backdrop-blur-sm relative z-0"
              >
                 <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-5 flex items-center gap-2">
                    <Palette size={12} /> Visual Identity
