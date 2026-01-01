@@ -237,11 +237,11 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang, posts }) => {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="border border-border/50 rounded-3xl p-6 sm:p-10 bg-card/10 backdrop-blur-sm shadow-sm relative overflow-hidden">
+                <div className="border border-border/50 rounded-3xl p-4 sm:p-10 bg-card/10 backdrop-blur-sm shadow-sm relative overflow-hidden">
                     {/* Corner accents */}
                     <div className="absolute top-0 left-0 w-20 h-20 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none" />
                     
-                    <div className="prose prose-zinc font-light text-sm dark:prose-invert prose-lg max-w-none 
+                    <div className="prose prose-zinc font-light text-base dark:prose-invert prose-lg max-w-none 
                       prose-headings:font-light prose-headings:tracking-tight 
                       prose-p:leading-relaxed prose-p:text-muted-foreground
                       prose-a:text-indigo-500 prose-a:no-underline hover:prose-a:underline

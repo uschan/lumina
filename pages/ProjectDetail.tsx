@@ -149,7 +149,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects, lang }) => {
                  initial={{ opacity: 0, y: 20 }}
                  whileInView={{ opacity: 1, y: 0 }}
                  viewport={{ once: true }}
-                 className="p-8 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm"
+                 className="p-4 sm:p-10 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm"
             >
                 {/* 1. Development Timeline (Compact, Top of Content) */}
                 {project.timeline && project.timeline.length > 0 && (
@@ -177,7 +177,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects, lang }) => {
 
                 {/* 2. Markdown Content */}
                 {project.content && (
-                    <div className="prose prose-zinc font-light text-sm dark:prose-invert max-w-none prose-img:rounded-xl prose-img:shadow-md prose-headings:font-medium prose-p:text-muted-foreground prose-a:text-indigo-500 hover:prose-a:text-indigo-400">
+                    <div className="prose prose-zinc font-light text-base dark:prose-invert max-w-none prose-img:rounded-xl prose-img:shadow-md prose-headings:font-medium prose-p:text-muted-foreground prose-a:text-indigo-500 hover:prose-a:text-indigo-400">
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{ 
