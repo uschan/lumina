@@ -13,7 +13,10 @@ export const ProjectService = {
         ...p, 
         publishDate: p.publish_date,
         visualIdentity: p.visual_identity, // Map DB snake_case to CamelCase
-        features: p.features
+        features: p.features,
+        gallery: p.gallery || [],
+        timeline: p.timeline || [],
+        collaborators: p.collaborators || []
     }));
   },
 
@@ -33,7 +36,10 @@ export const ProjectService = {
         publish_date: project.publishDate,
         // New Fields
         features: project.features,
-        visual_identity: project.visualIdentity
+        visual_identity: project.visualIdentity,
+        gallery: project.gallery,
+        timeline: project.timeline,
+        collaborators: project.collaborators
     };
     const { error } = await supabase.from('projects').upsert(payload);
     if (error) throw error;

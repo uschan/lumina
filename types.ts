@@ -36,6 +36,18 @@ export interface VisualIdentity {
   colors?: string[];
 }
 
+export interface TimelineEvent {
+  date: string;
+  title: string;
+  description: string;
+}
+
+export interface Collaborator {
+  name: string;
+  role: string;
+  avatar?: string; // URL or 'bot' | 'user' enum-like string
+}
+
 export interface Project {
   id: string;
   slug: string;        // SEO Friendly URL
@@ -51,6 +63,9 @@ export interface Project {
   // New Fields
   features?: CoreFeature[];
   visualIdentity?: VisualIdentity;
+  gallery?: string[];
+  timeline?: TimelineEvent[];
+  collaborators?: Collaborator[];
   
   // Deprecated but kept for compatibility/migration
   palette?: string[]; 

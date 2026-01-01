@@ -24,6 +24,9 @@ create table if not exists public.projects (
   -- NEW FIELDS
   features jsonb, -- Array of objects: [{title, description, aiModel?}]
   visual_identity jsonb, -- Object: { layout, typography, iconography, animation, colors: [] }
+  gallery text[], -- Array of image URLs for the carousel
+  timeline jsonb, -- Array of objects: [{date, title, description}]
+  collaborators jsonb, -- Array of objects: [{name, role, avatar}]
 
   featured boolean default false,
   publish_date date default current_date,

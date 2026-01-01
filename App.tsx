@@ -11,10 +11,10 @@ import BackToTop from './components/BackToTop';
 import Starfield from './components/Starfield';
 import { TRANSLATIONS } from './constants';
 import { ContentService } from './services/content';
-import { Language, Project, Post, ToolItem } from './types';
+import { Language } from './types';
 import { AnimatePresence } from 'framer-motion';
-// FIX: Use stable icon names. Replaced TerminalSquare->Terminal, FileCode2->FileCode to prevent build errors.
-import { BarChart, Users, Sparkles, Bot, BrainCircuit, Image, Code2, MousePointer, Terminal, Container, Atom, FileCode, Wind, Box, PenTool, Smartphone, Database, Cloud, Cpu } from 'lucide-react';
+import { BarChart, Users } from 'lucide-react';
+import { getIconForTech } from './utils/iconMap';
 
 // Lazy Load Pages
 const Landing = React.lazy(() => import('./pages/Landing'));
@@ -43,29 +43,6 @@ const ScrollToTop = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
   return null;
-};
-
-// Icon Mapping Helper
-const getIconForTool = (name: string) => {
-  const map: Record<string, any> = {
-    'Gemini 3 Pro': Sparkles,
-    'ChatGPT': Bot,
-    'Claude': BrainCircuit,
-    'Midjourney': Image,
-    'VS Code': Code2,
-    'Cursor': MousePointer, // Changed from MousePointer2
-    'PuTTY': Terminal,      // Changed from TerminalSquare
-    'Docker': Container,
-    'React 19': Atom,
-    'TypeScript': FileCode, // Changed from FileCode2
-    'Tailwind CSS': Wind,
-    'Next.js 15': Box,
-    'Figma': PenTool,
-    'Framer': Smartphone,
-    'Supabase': Database,
-    'Vercel': Cloud
-  };
-  return map[name] || Cpu;
 };
 
 const PageLoader = () => (
@@ -104,10 +81,10 @@ const AppContent: React.FC<{
     queryFn: ContentService.fetchTools 
   });
 
-  // Map icons to tools after fetching
+  // Map icons to tools after fetching using shared utility
   const tools = toolsData.map(tool => ({
     ...tool,
-    icon: getIconForTool(tool.name)
+    icon: getIconForTech(tool.iconName || tool.name)
   }));
 
   const isLoading = pLoading || blogLoading || tLoading;
